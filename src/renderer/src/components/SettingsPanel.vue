@@ -2,7 +2,7 @@
 import type { AppSettings, StorageStats } from '@shared/types'
 import { formatBytes } from '@renderer/utils/format'
 
-const props = defineProps<{
+defineProps<{
   settings: AppSettings
   storageStats: StorageStats
 }>()
@@ -10,6 +10,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   chooseIndexDbPath: []
   chooseThumbnailDir: []
+  chooseTmpDir: []
   addSourceDir: []
   removeSourceDir: [path: string]
   openPath: [path: string]
@@ -103,6 +104,28 @@ function onQualityChange(value: string): void {
         </div>
         <UButton class="cute-button" color="rose" variant="soft" size="sm" icon="i-lucide-trash-2" label="清除缩略图" @click="emit('clearThumbnails')" />
       </div>
+    </div>
+
+    <div class="space-y-4 rounded-3xl bg-slate-50/50 p-6 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+      <div class="flex items-center gap-2 mb-1">
+        <UIcon name="i-lucide-folder-clock" class="h-4 w-4 text-cyan-500" />
+        <label class="text-sm font-bold text-slate-700 dark:text-slate-200">临时目录</label>
+      </div>
+      <div class="flex gap-3">
+        <UInput :model-value="settings.tmpDir" readonly class="cute-input flex-1" size="lg" color="white" variant="outline" :ui="{ rounded: 'rounded-2xl' }" />
+        <UButton class="cute-button" size="lg" color="cyan" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseTmpDir')" />
+        <UButton
+          class="cute-button"
+          size="lg"
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-external-link"
+          label="打开"
+          :disabled="!settings.tmpDir"
+          @click="emit('openPath', settings.tmpDir)"
+        />
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400">视频抽帧会写入临时文件，此项必须手动配置。</p>
     </div>
 
     <div class="space-y-4 rounded-3xl bg-slate-50/50 p-6 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">

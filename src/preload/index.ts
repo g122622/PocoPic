@@ -20,6 +20,7 @@ const api = {
   chooseIndexDbPath: (): Promise<string> => electronAPI.ipcRenderer.invoke('dialog:choose-index-db'),
   chooseThumbnailDir: (): Promise<string> => electronAPI.ipcRenderer.invoke('dialog:choose-thumbnail-dir'),
   chooseSourceDir: (): Promise<string> => electronAPI.ipcRenderer.invoke('dialog:choose-source-dir'),
+  chooseTmpDir: (): Promise<string> => electronAPI.ipcRenderer.invoke('dialog:choose-tmp-dir'),
 
   openPath: (fullPath: string): Promise<void> => electronAPI.ipcRenderer.invoke('path:open', fullPath),
   openMedia: (mediaPath: string): Promise<void> => electronAPI.ipcRenderer.invoke('media:open', mediaPath),

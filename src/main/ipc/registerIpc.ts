@@ -82,6 +82,15 @@ export function registerIpc(params: RegisterIpcParams): void {
     return result.canceled ? '' : result.filePaths[0]
   })
 
+  ipcMain.handle('dialog:choose-tmp-dir', async () => {
+    const result = await dialog.showOpenDialog({
+      title: '选择临时目录',
+      properties: ['openDirectory', 'createDirectory']
+    })
+
+    return result.canceled ? '' : result.filePaths[0]
+  })
+
   ipcMain.handle('path:open', async (_, fullPath: string) => {
     if (!fullPath) {
       throw new Error('路径不能为空。')

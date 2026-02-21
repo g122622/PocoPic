@@ -45,8 +45,8 @@ export class BuildService extends EventEmitter {
       throw new Error('当前已有构建任务在执行，请先暂停或取消当前任务。')
     }
 
-    if (!settings.indexDbPath || !settings.thumbnailDir) {
-      throw new Error('请先设置元数据索引路径与缩略图目录。')
+    if (!settings.indexDbPath || !settings.thumbnailDir || !settings.tmpDir) {
+      throw new Error('请先设置元数据索引路径、缩略图目录与临时目录。')
     }
 
     if (settings.sourceDirs.length === 0) {
@@ -156,6 +156,7 @@ export class BuildService extends EventEmitter {
 
     this._queue = scannedFiles.map((filePath) => ({
       filePath,
+      tmpDir: settings.tmpDir,
       thumbnailSize: settings.thumbnailSize,
       thumbnailQuality: settings.thumbnailQuality,
       ignoreLocationData: settings.ignoreLocationData

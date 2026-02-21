@@ -44,6 +44,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     return (
       settings.value.indexDbPath.length > 0 &&
       settings.value.thumbnailDir.length > 0 &&
+      settings.value.tmpDir.length > 0 &&
       settings.value.sourceDirs.length > 0
     )
   })
@@ -52,7 +53,9 @@ export const useGalleryStore = defineStore('gallery', () => {
     if (!settings.value) {
       return true
     }
-    return settings.value.indexDbPath.length === 0 || settings.value.thumbnailDir.length === 0
+    return (
+      settings.value.indexDbPath.length === 0 || settings.value.thumbnailDir.length === 0 || settings.value.tmpDir.length === 0
+    )
   })
 
   const progressPercent = computed(() => {
@@ -123,6 +126,13 @@ export const useGalleryStore = defineStore('gallery', () => {
     if (!next.includes(path)) {
       next.push(path)
       await updateSettings({ sourceDirs: next })
+    }
+  }
+
+  async function chooseTmpDir(): Promise<void> {
+    const path = await window.api.chooseTmpDir()
+    if (path) {
+      await updateSettings({ tmpDir: path })
     }
   }
 
@@ -317,6 +327,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     updateSettings,
     chooseIndexDbPath,
     chooseThumbnailDir,
+    chooseTmpDir,
     addSourceDir,
     removeSourceDir,
     openPath,

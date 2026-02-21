@@ -16,6 +16,7 @@ interface PocoPicApi {
   chooseIndexDbPath: () => Promise<string>
   chooseThumbnailDir: () => Promise<string>
   chooseSourceDir: () => Promise<string>
+  chooseTmpDir: () => Promise<string>
   openPath: (fullPath: string) => Promise<void>
   openMedia: (mediaPath: string) => Promise<void>
   startBuild: () => Promise<void>

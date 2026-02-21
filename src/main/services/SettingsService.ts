@@ -20,6 +20,7 @@ export class SettingsService {
     return {
       indexDbPath: raw.indexDbPath ?? '',
       thumbnailDir: raw.thumbnailDir ?? '',
+      tmpDir: raw.tmpDir ?? '',
       sourceDirs: raw.sourceDirs ?? [],
       workerCount: raw.workerCount ?? workerCountDefault,
       thumbnailSize: raw.thumbnailSize ?? 256,

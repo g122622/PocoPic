@@ -3,6 +3,7 @@ export type MediaType = 'image' | 'video'
 export interface AppSettings {
   indexDbPath: string
   thumbnailDir: string
+  tmpDir: string
   sourceDirs: string[]
   workerCount: number
   thumbnailSize: number
@@ -88,6 +89,7 @@ export interface StorageStats {
 
 export interface BuildTask {
   filePath: string
+  tmpDir: string
   thumbnailSize: number
   thumbnailQuality: number
   ignoreLocationData: boolean

@@ -1,13 +1,13 @@
 import { parentPort } from 'node:worker_threads'
 import { createHash } from 'node:crypto'
-import { basename, extname, join } from 'node:path'
+import { basename, extname } from 'node:path'
 import { promises as fs } from 'node:fs'
-import { tmpdir } from 'node:os'
 import exifr from 'exifr'
 import sharp from 'sharp'
 import ffmpeg from 'fluent-ffmpeg'
 import ffmpegStatic from 'ffmpeg-static'
 import type { BuildTask, BuildTaskResult } from '../../shared/types'
+import { resolveVideoFrameTempPath } from '../services/PathResolver'
 
 if (!parentPort) {
   throw new Error('Worker 初始化失败，无法建立通信通道。')
@@ -74,7 +74,7 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
       .webp({ quality: task.thumbnailQuality })
       .toBuffer()
   } else {
-    const tempFramePath = join(tmpdir(), `pocopic-frame-${Date.now()}-${Math.random()}.jpg`)
+    const tempFramePath = resolveVideoFrameTempPath(task.tmpDir)
     try {
       await extractVideoFrame(task.filePath, tempFramePath)
       const metadata = await sharp(tempFramePath).metadata()

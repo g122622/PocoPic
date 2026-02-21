@@ -42,6 +42,7 @@ async function handleAction(action: () => Promise<void>): Promise<void> {
         :storage-stats="store.storageStats"
         @choose-index-db-path="() => handleAction(store.chooseIndexDbPath)"
         @choose-thumbnail-dir="() => handleAction(store.chooseThumbnailDir)"
+        @choose-tmp-dir="() => handleAction(store.chooseTmpDir)"
         @add-source-dir="() => handleAction(store.addSourceDir)"
         @remove-source-dir="(path) => handleAction(() => store.removeSourceDir(path))"
         @open-path="(path) => handleAction(() => store.openPath(path))"

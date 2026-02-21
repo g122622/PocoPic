@@ -108,7 +108,7 @@ async function handleAction(action: () => Promise<void>): Promise<void> {
           <div class="space-y-4 mb-8">
             <div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-700 text-slate-400">1</div>
-              <p class="text-sm text-slate-600 dark:text-slate-300">设置元数据索引路径与缩略图目录</p>
+              <p class="text-sm text-slate-600 dark:text-slate-300">设置元数据索引路径、缩略图目录与临时目录</p>
             </div>
             <div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-700 text-slate-400">2</div>
@@ -123,6 +123,7 @@ async function handleAction(action: () => Promise<void>): Promise<void> {
           <div class="flex flex-wrap gap-3 justify-end">
             <UButton class="cute-button" size="lg" color="primary" variant="soft" icon="i-lucide-database" label="选择索引路径" @click="() => handleAction(store.chooseIndexDbPath)" />
             <UButton class="cute-button" size="lg" color="secondary" variant="soft" icon="i-lucide-image" label="选择缩略图目录" @click="() => handleAction(store.chooseThumbnailDir)" />
+            <UButton class="cute-button" size="lg" color="info" variant="soft" icon="i-lucide-folder-clock" label="选择临时目录" @click="() => handleAction(store.chooseTmpDir)" />
             <UButton class="cute-button" size="lg" color="neutral" variant="outline" icon="i-lucide-folder-plus" label="添加扫描目录" @click="() => handleAction(store.addSourceDir)" />
           </div>
         </div>
