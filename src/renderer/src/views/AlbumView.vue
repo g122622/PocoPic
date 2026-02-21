@@ -35,17 +35,7 @@ function onDateRangePatch(start: number | null, end: number | null): void {
 </script>
 
 <template>
-  <div class="flex h-full flex-col gap-3">
-    <header class="rounded-3xl bg-white/70 px-5 py-3 shadow-sm backdrop-blur-md dark:bg-black/20">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-xl font-bold text-slate-700 dark:text-slate-100">PocoPic</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-300">可爱极简风 · 超大图库 · 手动构建索引</p>
-        </div>
-        <div class="text-xs text-slate-500 dark:text-slate-300">总媒体：{{ store.total }}</div>
-      </div>
-    </header>
-
+  <div class="flex h-full flex-col gap-4">
     <SearchToolbar
       :keyword="store.keyword"
       :favorites-only="store.favoritesOnly"
@@ -55,12 +45,15 @@ function onDateRangePatch(start: number | null, end: number | null): void {
       @apply="() => handleAction(store.applyFilters)"
     />
 
-    <p v-if="uiError" class="rounded-xl bg-rose-100 px-3 py-2 text-xs text-rose-600 dark:bg-rose-900/40 dark:text-rose-200">
-      {{ uiError }}
-    </p>
+    <div v-if="uiError" class="rounded-2xl bg-rose-50 p-4 shadow-sm border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800/30 flex items-center gap-3">
+      <UIcon name="i-lucide-alert-circle" class="h-5 w-5 text-rose-500" />
+      <p class="text-sm font-medium text-rose-600 dark:text-rose-300">
+        {{ uiError }}
+      </p>
+    </div>
 
-    <div class="grid min-h-0 flex-1 grid-cols-[320px_1fr_260px] gap-3">
-      <aside class="min-h-0 space-y-3 overflow-auto pr-1">
+    <div class="grid min-h-0 flex-1 grid-cols-[340px_1fr_280px] gap-4">
+      <aside class="min-h-0 space-y-4 overflow-y-auto overflow-x-hidden pr-2 pb-2">
         <BuildStatusPanel
           :status="store.buildStatus"
           :progress-percent="store.progressPercent"
@@ -73,7 +66,7 @@ function onDateRangePatch(start: number | null, end: number | null): void {
         <BuildErrorsPanel :errors="store.errors" @clear="() => handleAction(store.clearErrors)" />
       </aside>
 
-      <main class="min-h-0">
+      <main class="min-h-0 relative">
         <MediaVirtualGrid
           :total="store.total"
           :get-item="store.getMediaByIndex"
@@ -84,7 +77,7 @@ function onDateRangePatch(start: number | null, end: number | null): void {
         />
       </main>
 
-      <aside class="min-h-0">
+      <aside class="min-h-0 pb-2">
         <YearTimelinePanel :buckets="store.yearBuckets" @select-year="(year) => handleAction(() => store.jumpToYear(year))" />
       </aside>
     </div>

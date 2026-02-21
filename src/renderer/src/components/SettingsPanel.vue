@@ -41,120 +41,198 @@ function onQualityChange(value: string): void {
 </script>
 
 <template>
-  <div class="space-y-4 rounded-3xl bg-white/70 p-5 shadow-sm backdrop-blur-md dark:bg-black/20">
-    <h2 class="text-base font-semibold text-slate-700 dark:text-slate-100">设置</h2>
+  <div class="cute-panel space-y-8 p-8">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+        <UIcon name="i-lucide-sliders-horizontal" class="h-5 w-5" />
+      </div>
+      <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">基础设置</h2>
+    </div>
 
-    <div class="space-y-3">
-      <label class="text-xs text-slate-500 dark:text-slate-300">元数据索引数据库</label>
-      <div class="flex gap-2">
-        <UInput :model-value="settings.indexDbPath" readonly class="flex-1" />
-        <UButton color="neutral" variant="soft" label="选择" @click="emit('chooseIndexDbPath')" />
+    <div class="space-y-4 rounded-3xl bg-slate-50/50 p-6 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+      <div class="flex items-center gap-2 mb-1">
+        <UIcon name="i-lucide-database" class="h-4 w-4 text-primary-500" />
+        <label class="text-sm font-bold text-slate-700 dark:text-slate-200">元数据索引数据库</label>
+      </div>
+      <div class="flex gap-3">
+        <UInput :model-value="settings.indexDbPath" readonly class="cute-input flex-1" size="lg" color="white" variant="outline" :ui="{ rounded: 'rounded-2xl' }" />
+        <UButton class="cute-button" size="lg" color="primary" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseIndexDbPath')" />
         <UButton
+          class="cute-button"
+          size="lg"
           color="neutral"
           variant="outline"
+          icon="i-lucide-external-link"
           label="打开"
           :disabled="!settings.indexDbPath"
           @click="emit('openPath', settings.indexDbPath)"
         />
       </div>
-      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-300">
-        <span>索引大小：{{ formatBytes(storageStats.indexDbBytes) }}</span>
-        <UButton color="error" variant="soft" size="xs" label="清除索引" @click="emit('clearIndexDb')" />
+      <div class="flex items-center justify-between mt-2 rounded-2xl bg-white/60 p-3 dark:bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-hard-drive" class="h-4 w-4 text-slate-400" />
+          <span class="text-sm font-medium text-slate-600 dark:text-slate-300">索引大小：<span class="font-bold text-primary-600 dark:text-primary-400">{{ formatBytes(storageStats.indexDbBytes) }}</span></span>
+        </div>
+        <UButton class="cute-button" color="rose" variant="soft" size="sm" icon="i-lucide-trash-2" label="清除索引" @click="emit('clearIndexDb')" />
       </div>
     </div>
 
-    <div class="space-y-3">
-      <label class="text-xs text-slate-500 dark:text-slate-300">缩略图目录</label>
-      <div class="flex gap-2">
-        <UInput :model-value="settings.thumbnailDir" readonly class="flex-1" />
-        <UButton color="neutral" variant="soft" label="选择" @click="emit('chooseThumbnailDir')" />
+    <div class="space-y-4 rounded-3xl bg-slate-50/50 p-6 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+      <div class="flex items-center gap-2 mb-1">
+        <UIcon name="i-lucide-image" class="h-4 w-4 text-emerald-500" />
+        <label class="text-sm font-bold text-slate-700 dark:text-slate-200">缩略图目录</label>
+      </div>
+      <div class="flex gap-3">
+        <UInput :model-value="settings.thumbnailDir" readonly class="cute-input flex-1" size="lg" color="white" variant="outline" :ui="{ rounded: 'rounded-2xl' }" />
+        <UButton class="cute-button" size="lg" color="emerald" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseThumbnailDir')" />
         <UButton
+          class="cute-button"
+          size="lg"
           color="neutral"
           variant="outline"
+          icon="i-lucide-external-link"
           label="打开"
           :disabled="!settings.thumbnailDir"
           @click="emit('openPath', settings.thumbnailDir)"
         />
       </div>
-      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-300">
-        <span>缩略图大小：{{ formatBytes(storageStats.thumbnailBytes) }}</span>
-        <UButton color="error" variant="soft" size="xs" label="清除缩略图" @click="emit('clearThumbnails')" />
+      <div class="flex items-center justify-between mt-2 rounded-2xl bg-white/60 p-3 dark:bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-hard-drive" class="h-4 w-4 text-slate-400" />
+          <span class="text-sm font-medium text-slate-600 dark:text-slate-300">缩略图大小：<span class="font-bold text-emerald-600 dark:text-emerald-400">{{ formatBytes(storageStats.thumbnailBytes) }}</span></span>
+        </div>
+        <UButton class="cute-button" color="rose" variant="soft" size="sm" icon="i-lucide-trash-2" label="清除缩略图" @click="emit('clearThumbnails')" />
       </div>
     </div>
 
-    <div class="space-y-2">
-      <div class="flex items-center justify-between">
-        <label class="text-xs text-slate-500 dark:text-slate-300">扫描目录</label>
-        <UButton color="neutral" variant="soft" size="xs" label="添加目录" @click="emit('addSourceDir')" />
+    <div class="space-y-4 rounded-3xl bg-slate-50/50 p-6 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-folder-open" class="h-4 w-4 text-amber-500" />
+          <label class="text-sm font-bold text-slate-700 dark:text-slate-200">扫描目录</label>
+        </div>
+        <UButton class="cute-button" color="amber" variant="soft" size="sm" icon="i-lucide-plus" label="添加目录" @click="emit('addSourceDir')" />
       </div>
-      <ul class="max-h-36 space-y-2 overflow-auto">
+      <ul class="max-h-48 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
         <li
           v-for="dir in settings.sourceDirs"
           :key="dir"
-          class="flex items-center justify-between gap-2 rounded-xl bg-white/80 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900/70 dark:text-slate-200"
+          class="flex items-center justify-between gap-3 rounded-2xl bg-white p-3 shadow-sm border border-slate-100 dark:bg-slate-900 dark:border-slate-800 transition-all hover:shadow-md hover:-translate-y-0.5"
         >
-          <span class="truncate">{{ dir }}</span>
-          <div class="flex gap-1">
-            <UButton size="xs" color="neutral" variant="outline" label="开" @click="emit('openPath', dir)" />
-            <UButton size="xs" color="error" variant="soft" label="删" @click="emit('removeSourceDir', dir)" />
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400">
+              <UIcon name="i-lucide-folder" class="h-4 w-4" />
+            </div>
+            <span class="truncate text-sm font-medium text-slate-700 dark:text-slate-300" :title="dir">{{ dir }}</span>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <UButton class="cute-button" size="sm" color="neutral" variant="soft" icon="i-lucide-external-link" @click="emit('openPath', dir)" />
+            <UButton class="cute-button" size="sm" color="rose" variant="soft" icon="i-lucide-x" @click="emit('removeSourceDir', dir)" />
           </div>
         </li>
       </ul>
     </div>
 
-    <div class="grid grid-cols-3 gap-2 text-xs">
-      <label class="space-y-1">
-        <span class="text-slate-500 dark:text-slate-300">Worker 数</span>
+    <div class="flex items-center gap-3 mb-2 mt-8">
+      <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+        <UIcon name="i-lucide-cpu" class="h-5 w-5" />
+      </div>
+      <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">高级设置</h2>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+      <div class="space-y-2 rounded-2xl bg-slate-50/50 p-4 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+        <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
+          <UIcon name="i-lucide-network" class="h-4 w-4 text-indigo-500" />
+          Worker 数
+        </label>
         <UInput
           type="number"
+          class="cute-input"
+          size="md"
+          color="white"
+          variant="outline"
+          :ui="{ rounded: 'rounded-xl' }"
           :model-value="String(settings.workerCount)"
           @update:model-value="onWorkerCountChange"
         />
-      </label>
-      <label class="space-y-1">
-        <span class="text-slate-500 dark:text-slate-300">缩略图尺寸</span>
+      </div>
+      <div class="space-y-2 rounded-2xl bg-slate-50/50 p-4 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+        <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
+          <UIcon name="i-lucide-scaling" class="h-4 w-4 text-indigo-500" />
+          缩略图尺寸
+        </label>
         <UInput
           type="number"
+          class="cute-input"
+          size="md"
+          color="white"
+          variant="outline"
+          :ui="{ rounded: 'rounded-xl' }"
           :model-value="String(settings.thumbnailSize)"
           @update:model-value="onSizeChange"
         />
-      </label>
-      <label class="space-y-1">
-        <span class="text-slate-500 dark:text-slate-300">压缩质量</span>
+      </div>
+      <div class="space-y-2 rounded-2xl bg-slate-50/50 p-4 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+        <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
+          <UIcon name="i-lucide-image-minus" class="h-4 w-4 text-indigo-500" />
+          压缩质量
+        </label>
         <UInput
           type="number"
+          class="cute-input"
+          size="md"
+          color="white"
+          variant="outline"
+          :ui="{ rounded: 'rounded-xl' }"
           :model-value="String(settings.thumbnailQuality)"
           @update:model-value="onQualityChange"
         />
-      </label>
+      </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-4 text-xs">
-      <USwitch
-        :model-value="settings.ignoreLocationData"
-        label="构建时忽略位置数据"
-        @update:model-value="(value) => emit('updateSettings', { ignoreLocationData: value })"
-      />
-      <div class="flex items-center gap-2">
-        <span class="text-slate-500 dark:text-slate-300">主题</span>
-        <button
-          class="rounded-lg bg-white/90 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-200"
-          @click="emit('updateSettings', { colorMode: 'system' })"
-        >
-          跟随系统
-        </button>
-        <button
-          class="rounded-lg bg-white/90 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-200"
-          @click="emit('updateSettings', { colorMode: 'light' })"
-        >
-          浅色
-        </button>
-        <button
-          class="rounded-lg bg-white/90 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-200"
-          @click="emit('updateSettings', { colorMode: 'dark' })"
-        >
-          深色
-        </button>
+    <div class="flex flex-wrap items-center gap-6 rounded-3xl bg-slate-50/50 p-6 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+      <div class="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-50 text-violet-500 dark:bg-violet-900/30 dark:text-violet-400">
+          <UIcon name="i-lucide-map-pin-off" class="h-4 w-4" />
+        </div>
+        <USwitch
+          :model-value="settings.ignoreLocationData"
+          color="violet"
+          size="md"
+          @update:model-value="(value) => emit('updateSettings', { ignoreLocationData: value })"
+        />
+        <span class="text-sm font-bold text-slate-700 dark:text-slate-200 pr-2">构建时忽略位置数据</span>
+      </div>
+
+      <div class="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-500 dark:bg-sky-900/30 dark:text-sky-400">
+          <UIcon name="i-lucide-palette" class="h-4 w-4" />
+        </div>
+        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">主题</span>
+        <div class="flex gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl">
+          <button
+            class="rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300"
+            :class="settings.colorMode === 'system' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+            @click="emit('updateSettings', { colorMode: 'system' })"
+          >
+            跟随系统
+          </button>
+          <button
+            class="rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300"
+            :class="settings.colorMode === 'light' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+            @click="emit('updateSettings', { colorMode: 'light' })"
+          >
+            浅色
+          </button>
+          <button
+            class="rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300"
+            :class="settings.colorMode === 'dark' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+            @click="emit('updateSettings', { colorMode: 'dark' })"
+          >
+            深色
+          </button>
+        </div>
       </div>
     </div>
   </div>

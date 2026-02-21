@@ -106,7 +106,7 @@ function getIndex(rowIndex: number, colIndex: number): number {
 <template>
   <div
     ref="containerRef"
-    class="h-full overflow-auto rounded-3xl bg-white/70 p-4 shadow-sm backdrop-blur-md dark:bg-black/20"
+    class="cute-panel h-full overflow-y-auto overflow-x-hidden p-6 custom-scrollbar"
     @scroll="onScroll"
   >
     <div
@@ -129,40 +129,49 @@ function getIndex(rowIndex: number, colIndex: number): number {
       >
         <div class="grid" :style="{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`, gap: `${cellGap}px` }">
           <template v-for="col in columnCount" :key="col">
-            <div class="rounded-2xl bg-white/80 p-2 shadow-sm dark:bg-slate-900/70" :style="{ minHeight: `${cellSize + 48}px` }">
+            <div class="cute-card group relative overflow-hidden p-3" :style="{ minHeight: `${cellSize + 64}px` }">
               <template v-if="getItem(getIndex(rowIndex, col - 1))">
                 <button
-                  class="group block w-full text-left"
+                  class="block w-full text-left outline-none focus:ring-2 focus:ring-primary-400/50 rounded-2xl transition-all duration-300"
                   @dblclick="emit('openMedia', getItem(getIndex(rowIndex, col - 1))!.filePath)"
                 >
-                  <img
-                    class="h-[180px] w-full rounded-xl object-cover"
-                    :src="getThumbnailUrl(getItem(getIndex(rowIndex, col - 1))!.thumbnailPath)"
-                    :alt="getItem(getIndex(rowIndex, col - 1))!.fileName"
-                  />
-                  <div class="mt-2 flex items-start justify-between gap-2">
-                    <div class="min-w-0">
-                      <p class="truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
-                        {{ getItem(getIndex(rowIndex, col - 1))!.fileName }}
-                      </p>
-                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                        {{ formatTime(getItem(getIndex(rowIndex, col - 1))!.capturedAt) }}
-                      </p>
-                    </div>
+                  <div class="relative overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
+                    <img
+                      class="h-[180px] w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105"
+                      :src="getThumbnailUrl(getItem(getIndex(rowIndex, col - 1))!.thumbnailPath)"
+                      :alt="getItem(getIndex(rowIndex, col - 1))!.fileName"
+                      loading="lazy"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
                     <UButton
-                      size="xs"
-                      color="neutral"
-                      variant="soft"
-                      :label="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? '★' : '☆'"
+                      class="absolute right-2 top-2 opacity-0 transition-all duration-300 group-hover:opacity-100 hover:scale-110"
+                      size="sm"
+                      :color="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'amber' : 'white'"
+                      :variant="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'solid' : 'soft'"
+                      :icon="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'i-lucide-star' : 'i-lucide-star'"
+                      :ui="{ rounded: 'rounded-xl' }"
                       @click.stop="emit('toggleFavorite', getItem(getIndex(rowIndex, col - 1))!.id, getItem(getIndex(rowIndex, col - 1))!.isFavorite === 0)"
                     />
+                  </div>
+
+                  <div class="mt-3 px-1">
+                    <p class="truncate text-sm font-bold text-slate-700 dark:text-slate-200 transition-colors group-hover:text-primary-500 dark:group-hover:text-primary-400" :title="getItem(getIndex(rowIndex, col - 1))!.fileName">
+                      {{ getItem(getIndex(rowIndex, col - 1))!.fileName }}
+                    </p>
+                    <div class="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500">
+                      <UIcon name="i-lucide-clock" class="h-3 w-3" />
+                      <span>{{ formatTime(getItem(getIndex(rowIndex, col - 1))!.capturedAt) }}</span>
+                    </div>
                   </div>
                 </button>
               </template>
               <template v-else>
-                <USkeleton class="h-[180px] w-full rounded-xl" />
-                <USkeleton class="mt-2 h-4 w-5/6" />
-                <USkeleton class="mt-1 h-3 w-3/5" />
+                <USkeleton class="h-[180px] w-full rounded-2xl bg-slate-200/50 dark:bg-slate-700/50" />
+                <div class="mt-3 px-1 space-y-2">
+                  <USkeleton class="h-4 w-3/4 rounded-lg bg-slate-200/50 dark:bg-slate-700/50" />
+                  <USkeleton class="h-3 w-1/2 rounded-lg bg-slate-200/50 dark:bg-slate-700/50" />
+                </div>
               </template>
             </div>
           </template>

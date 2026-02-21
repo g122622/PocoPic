@@ -5,20 +5,69 @@
 
 :root {
   color-scheme: light dark;
+  --color-primary-50: #fdf4ff;
+  --color-primary-100: #fae8ff;
+  --color-primary-200: #f5d0fe;
+  --color-primary-300: #f0abfc;
+  --color-primary-400: #e879f9;
+  --color-primary-500: #d946ef;
+  --color-primary-600: #c026d3;
+  --color-primary-700: #a21caf;
+  --color-primary-800: #86198f;
+  --color-primary-900: #701a75;
+  --color-primary-950: #5df;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 5% 10%, #fff7fb 0%, #fdf7ff 30%, #f6f7ff 100%);
+  background: radial-gradient(circle at 50% 0%, #fff0f5 0%, #fdf7ff 40%, #f0f4ff 100%);
   user-select: none;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 .dark body {
-  background: radial-gradient(circle at 5% 10%, #22253a 0%, #1d2033 35%, #141625 100%);
+  background: radial-gradient(circle at 50% 0%, #2a2438 0%, #1f1d2b 40%, #161622 100%);
 }
 
 #app {
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+}
+
+/* Cute Minimalist Global Styles */
+.cute-card {
+  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] rounded-2xl border border-white/50 dark:border-white/5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)];
+}
+
+.cute-card:hover {
+  @apply shadow-[0_12px_40px_rgb(0,0,0,0.08)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.3)] -translate-y-1;
+}
+
+.cute-panel {
+  @apply bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg shadow-sm rounded-xl border border-white/40 dark:border-white/5;
+}
+
+.cute-button {
+  @apply rounded-lg transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 hover:-translate-y-0.5 hover:shadow-md;
+}
+
+.cute-input {
+  @apply rounded-lg transition-all duration-300 focus:ring-2 focus:ring-primary-300/50 dark:focus:ring-primary-500/50;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200/50 dark:bg-slate-700/50 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300/80 dark:bg-slate-600/80;
 }
