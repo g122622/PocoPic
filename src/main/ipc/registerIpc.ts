@@ -5,9 +5,11 @@ import type {
   AppSettings,
   BuildErrorItem,
   BuildStatus,
+  MediaFilterQuery,
   MediaQuery,
   MediaQueryResult,
-  StorageStats
+  StorageStats,
+  YearBucket
 } from '../../shared/types'
 import { SettingsService } from '../services/SettingsService'
 import { DatabaseService } from '../services/DatabaseService'
@@ -126,6 +128,10 @@ export function registerIpc(params: RegisterIpcParams): void {
 
   ipcMain.handle('media:query', (_, query: MediaQuery): MediaQueryResult => {
     return databaseService.queryMedia(query)
+  })
+
+  ipcMain.handle('media:year-buckets', (_, query: MediaFilterQuery): YearBucket[] => {
+    return databaseService.queryYearBuckets(query)
   })
 
   ipcMain.handle('media:favorite', (_, mediaId: number, isFavorite: boolean) => {

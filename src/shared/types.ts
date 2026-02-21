@@ -64,6 +64,18 @@ export interface MediaQuery {
   limit: number
 }
 
+export interface MediaFilterQuery {
+  keyword: string
+  startTime: number | null
+  endTime: number | null
+  favoritesOnly: boolean
+}
+
+export interface YearBucket {
+  year: number
+  count: number
+}
+
 export interface MediaQueryResult {
   total: number
   items: MediaItem[]

@@ -3,9 +3,11 @@ import type {
   AppSettings,
   BuildErrorItem,
   BuildStatus,
+  MediaFilterQuery,
   MediaQuery,
   MediaQueryResult,
-  StorageStats
+  StorageStats,
+  YearBucket
 } from '../shared/types'
 
 interface PocoPicApi {
@@ -22,6 +24,7 @@ interface PocoPicApi {
   cancelBuild: () => Promise<void>
   getBuildStatus: () => Promise<BuildStatus>
   queryMedia: (query: MediaQuery) => Promise<MediaQueryResult>
+  queryYearBuckets: (query: MediaFilterQuery) => Promise<YearBucket[]>
   setFavorite: (mediaId: number, isFavorite: boolean) => Promise<void>
   listErrors: (limit: number) => Promise<BuildErrorItem[]>
   clearErrors: () => Promise<void>

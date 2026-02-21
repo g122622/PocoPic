@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import { dirname } from 'node:path'
 import { promises as fs } from 'node:fs'
-import type { BuildErrorItem, MediaItem, MediaQuery, MediaQueryResult } from '../../shared/types'
+import type { BuildErrorItem, MediaFilterQuery, MediaItem, MediaQuery, MediaQueryResult, YearBucket } from '../../shared/types'
 
 interface MediaRow {
   id: number
@@ -160,29 +160,7 @@ export class DatabaseService {
 
   public queryMedia(query: MediaQuery): MediaQueryResult {
     const db = this._requireDb()
-    const conditions: string[] = []
-    const params: Array<string | number> = []
-
-    if (query.keyword.trim().length > 0) {
-      conditions.push('file_name LIKE ?')
-      params.push(`%${query.keyword.trim()}%`)
-    }
-
-    if (query.startTime !== null) {
-      conditions.push('captured_at >= ?')
-      params.push(query.startTime)
-    }
-
-    if (query.endTime !== null) {
-      conditions.push('captured_at <= ?')
-      params.push(query.endTime)
-    }
-
-    if (query.favoritesOnly) {
-      conditions.push('is_favorite = 1')
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    const { whereClause, params } = this._buildFilterClause(query)
 
     const totalRow = db.prepare(`SELECT COUNT(1) as total FROM media ${whereClause}`).get(...params) as {
       total: number
@@ -225,6 +203,30 @@ export class DatabaseService {
     }
   }
 
+  public queryYearBuckets(query: MediaFilterQuery): YearBucket[] {
+    const db = this._requireDb()
+    const { whereClause, params } = this._buildFilterClause(query)
+
+    const rows = db
+      .prepare(
+        `
+      SELECT
+        CAST(strftime('%Y', datetime(captured_at / 1000, 'unixepoch')) AS INTEGER) AS year,
+        COUNT(1) AS count
+      FROM media
+      ${whereClause}
+      GROUP BY year
+      ORDER BY year DESC
+    `
+      )
+      .all(...params) as Array<{ year: number; count: number }>
+
+    return rows.map((row) => ({
+      year: row.year,
+      count: row.count
+    }))
+  }
+
   public toggleFavorite(mediaId: number, isFavorite: boolean): void {
     const db = this._requireDb()
     const result = db.prepare('UPDATE media SET is_favorite = ? WHERE id = ?').run(isFavorite ? 1 : 0, mediaId)
@@ -255,6 +257,33 @@ export class DatabaseService {
       locationName: row.location_name,
       aiTags: row.ai_tags
     }
+  }
+
+  private _buildFilterClause(query: MediaFilterQuery): { whereClause: string; params: Array<string | number> } {
+    const conditions: string[] = []
+    const params: Array<string | number> = []
+
+    if (query.keyword.trim().length > 0) {
+      conditions.push('file_name LIKE ?')
+      params.push(`%${query.keyword.trim()}%`)
+    }
+
+    if (query.startTime !== null) {
+      conditions.push('captured_at >= ?')
+      params.push(query.startTime)
+    }
+
+    if (query.endTime !== null) {
+      conditions.push('captured_at <= ?')
+      params.push(query.endTime)
+    }
+
+    if (query.favoritesOnly) {
+      conditions.push('is_favorite = 1')
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    return { whereClause, params }
   }
 
   private _requireDb(): Database.Database {

@@ -1,6 +1,6 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { AppSettings, BuildErrorItem, BuildStatus, MediaItem, StorageStats } from '@shared/types'
+import type { AppSettings, BuildErrorItem, BuildStatus, MediaItem, StorageStats, YearBucket } from '@shared/types'
 
 type SettingsPatch = Partial<AppSettings>
 
@@ -28,6 +28,7 @@ export const useGalleryStore = defineStore('gallery', () => {
   const endTime = ref<number | null>(null)
   const favoritesOnly = ref(false)
   const total = ref(0)
+  const yearBuckets = ref<YearBucket[]>([])
 
   const cache = ref(new Map<number, MediaItem>())
   const loadingPages = ref(new Set<number>())
@@ -72,6 +73,7 @@ export const useGalleryStore = defineStore('gallery', () => {
       buildStatus.value = status
       if (status.state === 'completed') {
         void refreshMedia()
+        void refreshYearBuckets()
         void refreshStorageStats()
       }
     })
@@ -84,7 +86,7 @@ export const useGalleryStore = defineStore('gallery', () => {
       errors.value = await window.api.listErrors(500)
     })
 
-    await refreshMedia()
+    await Promise.all([refreshMedia(), refreshYearBuckets()])
   }
 
   async function refreshStorageStats(): Promise<void> {
@@ -182,6 +184,15 @@ export const useGalleryStore = defineStore('gallery', () => {
     await ensureRangeLoaded(0, PAGE_SIZE)
   }
 
+  async function refreshYearBuckets(): Promise<void> {
+    yearBuckets.value = await window.api.queryYearBuckets({
+      keyword: keyword.value,
+      startTime: startTime.value,
+      endTime: endTime.value,
+      favoritesOnly: favoritesOnly.value
+    })
+  }
+
   async function ensureRangeLoaded(startIndex: number, endIndex: number): Promise<void> {
     const firstPage = Math.max(0, Math.floor(startIndex / PAGE_SIZE))
     const lastPage = Math.max(0, Math.floor(endIndex / PAGE_SIZE))
@@ -225,7 +236,7 @@ export const useGalleryStore = defineStore('gallery', () => {
 
   async function setFavorite(mediaId: number, isFavorite: boolean): Promise<void> {
     await window.api.setFavorite(mediaId, isFavorite)
-    await refreshMedia()
+    await Promise.all([refreshMedia(), refreshYearBuckets()])
   }
 
   async function openMedia(path: string): Promise<void> {
@@ -246,7 +257,14 @@ export const useGalleryStore = defineStore('gallery', () => {
   }
 
   async function applyFilters(): Promise<void> {
-    await refreshMedia()
+    await Promise.all([refreshMedia(), refreshYearBuckets()])
+  }
+
+  async function jumpToYear(year: number): Promise<void> {
+    const start = new Date(year, 0, 1, 0, 0, 0, 0).getTime()
+    const end = new Date(year, 11, 31, 23, 59, 59, 999).getTime()
+    setDateRange(start, end)
+    await applyFilters()
   }
 
   async function setColorMode(mode: 'system' | 'light' | 'dark'): Promise<void> {
@@ -290,6 +308,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     endTime,
     favoritesOnly,
     total,
+    yearBuckets,
     hasEssentialSettings,
     needFirstRunSetup,
     progressPercent,
@@ -318,6 +337,8 @@ export const useGalleryStore = defineStore('gallery', () => {
     applyFilters,
     setColorMode,
     toThumbnailUrl,
-    refreshMedia
+    refreshMedia,
+    refreshYearBuckets,
+    jumpToYear
   }
 })

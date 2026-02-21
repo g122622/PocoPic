@@ -23,6 +23,6 @@ export default defineConfig({
         '@shared': resolve('src/shared')
       }
     },
-    plugins: [vue(), tailwindcss(), ui({ router: false })]
+    plugins: [vue(), tailwindcss(), ui()]
   }
 })

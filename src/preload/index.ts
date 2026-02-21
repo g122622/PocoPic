@@ -1,6 +1,15 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { AppSettings, BuildErrorItem, BuildStatus, MediaQuery, MediaQueryResult, StorageStats } from '../shared/types'
+import type {
+  AppSettings,
+  BuildErrorItem,
+  BuildStatus,
+  MediaFilterQuery,
+  MediaQuery,
+  MediaQueryResult,
+  StorageStats,
+  YearBucket
+} from '../shared/types'
 
 // Custom APIs for renderer
 const api = {
@@ -22,6 +31,8 @@ const api = {
   getBuildStatus: (): Promise<BuildStatus> => electronAPI.ipcRenderer.invoke('build:status'),
 
   queryMedia: (query: MediaQuery): Promise<MediaQueryResult> => electronAPI.ipcRenderer.invoke('media:query', query),
+  queryYearBuckets: (query: MediaFilterQuery): Promise<YearBucket[]> =>
+    electronAPI.ipcRenderer.invoke('media:year-buckets', query),
   setFavorite: (mediaId: number, isFavorite: boolean): Promise<void> =>
     electronAPI.ipcRenderer.invoke('media:favorite', mediaId, isFavorite),
 
