@@ -14,6 +14,11 @@ const sidebarItems: NavigationMenuItem[] = [
     to: '/album'
   },
   {
+    label: '构建',
+    icon: 'i-lucide-hammer',
+    to: '/build'
+  },
+  {
     label: '设置',
     icon: 'i-lucide-settings-2',
     to: '/settings'
