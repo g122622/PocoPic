@@ -173,10 +173,14 @@ defineExpose({
           gap: `${sizePreset.cellGap}px`
         }">
           <template v-for="col in columnCount" :key="col">
-            <div class="cute-card group relative overflow-hidden" :style="{
-              minHeight: `${rowHeight - sizePreset.cellGap}px`,
-              padding: `${sizePreset.cardPadding}px`
-            }">
+            <UTooltip
+              :delay-duration="0"
+              :text="getItem(getIndex(rowIndex, col - 1))?.filePath || '文件路径不可用'"
+            >
+              <div class="cute-card group relative overflow-hidden" :style="{
+                minHeight: `${rowHeight - sizePreset.cellGap}px`,
+                padding: `${sizePreset.cardPadding}px`
+              }">
               <template v-if="getItem(getIndex(rowIndex, col - 1))">
                 <button
                   class="block w-full rounded-2xl text-left outline-none transition-all duration-200 focus:ring-2 focus:ring-primary-400/50"
@@ -190,17 +194,19 @@ defineExpose({
                     <div
                       class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     </div>
-                    <UButton
-                      class="absolute right-2 top-2 opacity-0 transition-all duration-300 hover:scale-110 group-hover:opacity-100"
-                      size="sm" :color="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'amber' : 'white'"
-                      :variant="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'solid' : 'soft'"
-                      icon="i-lucide-star" :ui="{ rounded: 'rounded-xl' }" @click.stop="
-                        emit(
-                          'toggleFavorite',
-                          getItem(getIndex(rowIndex, col - 1))!.id,
-                          getItem(getIndex(rowIndex, col - 1))!.isFavorite === 0
-                        )
-                        " />
+                    <UTooltip :delay-duration="0" text="切换收藏状态">
+                      <UButton
+                        class="absolute right-2 top-2 opacity-0 transition-all duration-300 hover:scale-110 group-hover:opacity-100"
+                        size="sm" :color="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'amber' : 'white'"
+                        :variant="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'solid' : 'soft'"
+                        icon="i-lucide-star" :ui="{ rounded: 'rounded-xl' }" @click.stop="
+                          emit(
+                            'toggleFavorite',
+                            getItem(getIndex(rowIndex, col - 1))!.id,
+                            getItem(getIndex(rowIndex, col - 1))!.isFavorite === 0
+                          )
+                          " />
+                    </UTooltip>
                   </div>
 
                   <div class="mt-2 px-1">
@@ -226,7 +232,8 @@ defineExpose({
                   <USkeleton class="h-3 w-full rounded-lg bg-slate-200/50 dark:bg-slate-700/50" />
                 </div>
               </template>
-            </div>
+              </div>
+            </UTooltip>
           </template>
         </div>
       </div>

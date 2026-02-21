@@ -31,6 +31,10 @@ interface PocoPicApi {
   setFavorite: (mediaId: number, isFavorite: boolean) => Promise<void>
   listErrors: (limit: number) => Promise<BuildErrorItem[]>
   clearErrors: () => Promise<void>
+  minimizeWindow: () => Promise<void>
+  toggleMaximizeWindow: () => Promise<void>
+  closeWindow: () => Promise<void>
+  isWindowMaximized: () => Promise<boolean>
   getStorageStats: () => Promise<StorageStats>
   clearIndexDb: () => Promise<void>
   clearThumbnails: () => Promise<void>

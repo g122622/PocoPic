@@ -19,3 +19,8 @@ export function resolveVideoFrameTempPath(tmpDir: string): string {
   const resolvedTmpDir = resolveTmpDir(tmpDir)
   return join(resolvedTmpDir, `pocopic-frame-${Date.now()}-${Math.random()}.jpg`)
 }
+
+export function resolveHeicConvertTempPath(tmpDir: string): string {
+  const resolvedTmpDir = resolveTmpDir(tmpDir)
+  return join(resolvedTmpDir, `pocopic-heic-${Date.now()}-${Math.random()}.jpg`)
+}

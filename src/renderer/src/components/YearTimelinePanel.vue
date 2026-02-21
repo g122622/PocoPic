@@ -44,42 +44,51 @@ function isExpanded(year: number): boolean {
           class="rounded-2xl border border-slate-200/70 bg-white/70 p-3 transition-colors dark:border-slate-700/70 dark:bg-slate-900/30"
         >
           <div class="flex items-center gap-2">
-            <UButton
-              color="primary"
-              variant="ghost"
-              class="flex-1 justify-start px-2"
-              :label="`${bucket.year} 年`"
-              icon="i-lucide-calendar-days"
-              @click="emit('selectYear', bucket.year)"
-            />
+            <UTooltip :delay-duration="0" :text="`跳转到 ${bucket.year} 年`">
+              <UButton
+                color="primary"
+                variant="ghost"
+                class="flex-1 justify-start px-2"
+                :label="`${bucket.year} 年`"
+                icon="i-lucide-calendar-days"
+                @click="emit('selectYear', bucket.year)"
+              />
+            </UTooltip>
 
             <span class="rounded-lg bg-primary-50 px-2 py-1 text-xs font-bold text-primary-500 dark:bg-primary-900/30 dark:text-primary-300">
-              {{ bucket.count }} 项
+              {{ bucket.count }}
             </span>
 
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              :icon="isExpanded(bucket.year) ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-              :aria-label="isExpanded(bucket.year) ? `收起 ${bucket.year} 年月份` : `展开 ${bucket.year} 年月份`"
-              @click="toggleYearExpand(bucket.year)"
-            />
+            <UTooltip :delay-duration="0" :text="isExpanded(bucket.year) ? `收起 ${bucket.year} 年月份` : `展开 ${bucket.year} 年月份`">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                :icon="isExpanded(bucket.year) ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                :aria-label="isExpanded(bucket.year) ? `收起 ${bucket.year} 年月份` : `展开 ${bucket.year} 年月份`"
+                @click="toggleYearExpand(bucket.year)"
+              />
+            </UTooltip>
           </div>
 
           <div v-if="isExpanded(bucket.year)" class="mt-3 pl-2">
             <div class="space-y-2 border-l border-dashed border-slate-300/80 pl-3 dark:border-slate-600/80">
-              <UButton
+              <UTooltip
                 v-for="monthBucket in bucket.months"
                 :key="`${bucket.year}-${monthBucket.month}`"
-                color="neutral"
-                variant="ghost"
-                class="w-full justify-between text-sm"
-                @click="emit('selectMonth', { year: bucket.year, month: monthBucket.month })"
+                :delay-duration="0"
+                :text="`跳转到 ${bucket.year} 年 ${monthBucket.month} 月`"
               >
-                <span class="font-medium text-slate-700 dark:text-slate-200">{{ monthBucket.month }} 月</span>
-                <span class="text-xs text-slate-400 dark:text-slate-500">{{ monthBucket.count }} 项</span>
-              </UButton>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  class="w-full justify-between text-sm"
+                  @click="emit('selectMonth', { year: bucket.year, month: monthBucket.month })"
+                >
+                  <span class="font-medium text-slate-700 dark:text-slate-200">{{ monthBucket.month }} 月</span>
+                  <span class="text-xs text-slate-400 dark:text-slate-500">{{ monthBucket.count }} 项</span>
+                </UButton>
+              </UTooltip>
             </div>
           </div>
         </div>

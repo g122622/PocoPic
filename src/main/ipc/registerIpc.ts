@@ -183,6 +183,47 @@ export function registerIpc(params: RegisterIpcParams): void {
 
     thumbnailDatabaseService.clearThumbnails()
   })
+
+  ipcMain.handle('window:minimize', () => {
+    const window = getWindow()
+    if (!window) {
+      throw new Error('主窗口未初始化。')
+    }
+
+    window.minimize()
+  })
+
+  ipcMain.handle('window:toggle-maximize', () => {
+    const window = getWindow()
+    if (!window) {
+      throw new Error('主窗口未初始化。')
+    }
+
+    if (window.isMaximized()) {
+      window.unmaximize()
+      return
+    }
+
+    window.maximize()
+  })
+
+  ipcMain.handle('window:close', () => {
+    const window = getWindow()
+    if (!window) {
+      throw new Error('主窗口未初始化。')
+    }
+
+    window.close()
+  })
+
+  ipcMain.handle('window:is-maximized', () => {
+    const window = getWindow()
+    if (!window) {
+      return false
+    }
+
+    return window.isMaximized()
+  })
 }
 
 async function ensureDatabaseConnection(

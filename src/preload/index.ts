@@ -43,6 +43,11 @@ const api = {
   listErrors: (limit: number): Promise<BuildErrorItem[]> => electronAPI.ipcRenderer.invoke('errors:list', limit),
   clearErrors: (): Promise<void> => electronAPI.ipcRenderer.invoke('errors:clear'),
 
+  minimizeWindow: (): Promise<void> => electronAPI.ipcRenderer.invoke('window:minimize'),
+  toggleMaximizeWindow: (): Promise<void> => electronAPI.ipcRenderer.invoke('window:toggle-maximize'),
+  closeWindow: (): Promise<void> => electronAPI.ipcRenderer.invoke('window:close'),
+  isWindowMaximized: (): Promise<boolean> => electronAPI.ipcRenderer.invoke('window:is-maximized'),
+
   getStorageStats: (): Promise<StorageStats> => electronAPI.ipcRenderer.invoke('storage:stats'),
   clearIndexDb: (): Promise<void> => electronAPI.ipcRenderer.invoke('storage:clear-index'),
   clearThumbnails: (): Promise<void> => electronAPI.ipcRenderer.invoke('storage:clear-thumbnails'),

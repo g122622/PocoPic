@@ -39,8 +39,8 @@ async function handleAction(action: () => Promise<void>): Promise<void> {
       </p>
     </div>
 
-    <div class="grid min-h-0 flex-1 grid-cols-[380px_1fr] gap-4">
-      <aside class="min-h-0 overflow-y-auto overflow-x-hidden pr-2 pb-2">
+    <div class="grid min-h-0 flex-1 grid-rows-[auto_1fr] gap-4">
+      <aside class="min-h-0 overflow-hidden">
         <BuildStatusPanel
           :status="store.buildStatus"
           :progress-percent="store.progressPercent"
@@ -51,7 +51,7 @@ async function handleAction(action: () => Promise<void>): Promise<void> {
         />
       </aside>
 
-      <main class="min-h-0 overflow-y-auto overflow-x-hidden pr-2 pb-2">
+      <main class="min-h-0 overflow-hidden">
         <BuildErrorsPanel :errors="store.errors" @clear="() => handleAction(store.clearErrors)" />
       </main>
     </div>

@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import appLogo from '@renderer/assets/logo.png'
+</script>
+
 <template>
   <div class="flex h-full flex-col gap-4">
     <header class="cute-panel px-6 py-4 flex items-center gap-4">
@@ -11,9 +15,7 @@
     </header>
 
     <div class="cute-panel p-8 flex flex-col items-center justify-center flex-1">
-      <div class="flex h-24 w-24 items-center justify-center rounded-[2rem] bg-gradient-to-br from-pink-300 to-purple-400 text-white shadow-xl shadow-pink-300/30 mb-6">
-        <UIcon name="i-lucide-camera" class="h-12 w-12" />
-      </div>
+        <img :src="appLogo" alt="PocoPic" class="w-45 object-contain mb-10" />
 
       <h2 class="text-3xl font-extrabold text-slate-800 dark:text-slate-100 mb-2">PocoPic</h2>
       <p class="text-slate-500 dark:text-slate-400 font-medium mb-8">可爱极简风 · 超大图库 · 手动构建索引</p>

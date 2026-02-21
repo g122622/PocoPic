@@ -6,8 +6,9 @@ import exifr from 'exifr'
 import sharp from 'sharp'
 import ffmpeg from 'fluent-ffmpeg'
 import ffmpegStatic from 'ffmpeg-static'
+import heicConvert from 'heic-convert'
 import type { BuildTask, BuildTaskResult } from '../../shared/types'
-import { resolveVideoFrameTempPath } from '../services/PathResolver'
+import { resolveHeicConvertTempPath, resolveVideoFrameTempPath } from '../services/PathResolver'
 
 if (!parentPort) {
   throw new Error('Worker 初始化失败，无法建立通信通道。')
@@ -30,6 +31,8 @@ const IMAGE_EXTENSIONS = new Set([
   '.tif',
   '.tiff'
 ])
+
+const HEIC_EXTENSIONS = new Set(['.heic', '.heif'])
 
 parentPort.on('message', async (task: BuildTask) => {
   try {
@@ -61,27 +64,30 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
   let thumbnailBytes: Buffer
 
   if (mediaType === 'image') {
-    const metadata = await sharp(task.filePath).metadata()
-    width = metadata.width ?? null
-    height = metadata.height ?? null
-
-    thumbnailBytes = await sharp(task.filePath)
-      .rotate()
-      .resize(task.thumbnailSize, task.thumbnailSize, {
-        fit: 'cover',
-        position: 'attention'
-      })
-      .webp({ quality: task.thumbnailQuality })
-      .toBuffer()
+    try {
+      const imageResult = await buildImageThumbnail(task, extension)
+      width = imageResult.width
+      height = imageResult.height
+      thumbnailBytes = imageResult.thumbnailBytes
+    } catch (error) {
+      return {
+        ok: false,
+        record: null,
+        thumbnailKey: null,
+        thumbnailBytes: null,
+        errorStage: 'thumbnail',
+        errorMessage: error instanceof Error ? error.message : `图片缩略图失败: ${basename(task.filePath)}`
+      }
+    }
   } else {
     const tempFramePath = resolveVideoFrameTempPath(task.tmpDir)
     try {
       await extractVideoFrame(task.filePath, tempFramePath)
-      const metadata = await sharp(tempFramePath).metadata()
+      const metadata = await sharp(tempFramePath, { failOn: 'none' }).metadata()
       width = metadata.width ?? null
       height = metadata.height ?? null
 
-      thumbnailBytes = await sharp(tempFramePath)
+      thumbnailBytes = await sharp(tempFramePath, { failOn: 'none' })
         .resize(task.thumbnailSize, task.thumbnailSize, {
           fit: 'cover',
           position: 'centre'
@@ -125,6 +131,94 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
       thumbnailPath: thumbnailKey
     }
   }
+}
+
+async function buildImageThumbnail(
+  task: BuildTask,
+  extension: string
+): Promise<{ width: number | null; height: number | null; thumbnailBytes: Buffer }> {
+  try {
+    const metadata = await sharp(task.filePath, { failOn: 'none' }).metadata()
+    const thumbnailBytes = await sharp(task.filePath, { failOn: 'none' })
+      .rotate()
+      .resize(task.thumbnailSize, task.thumbnailSize, {
+        fit: 'cover',
+        position: 'attention'
+      })
+      .webp({ quality: task.thumbnailQuality })
+      .toBuffer()
+
+    return {
+      width: metadata.width ?? null,
+      height: metadata.height ?? null,
+      thumbnailBytes
+    }
+  } catch (sharpError) {
+    if (!HEIC_EXTENSIONS.has(extension)) {
+      throw new Error(resolveImageThumbnailSharpErrorMessage(task.filePath, sharpError))
+    }
+
+    const tempImagePath = resolveHeicConvertTempPath(task.tmpDir)
+
+    try {
+      const inputBuffer = await fs.readFile(task.filePath)
+      const arrayBuffer = inputBuffer.buffer.slice(
+        inputBuffer.byteOffset,
+        inputBuffer.byteOffset + inputBuffer.byteLength
+      )
+      const convertedBuffer = await heicConvert({
+        buffer: arrayBuffer,
+        format: 'JPEG',
+        quality: normalizeHeicQuality(task.thumbnailQuality)
+      })
+      await fs.writeFile(tempImagePath, Buffer.from(new Uint8Array(convertedBuffer)))
+
+      const metadata = await sharp(tempImagePath, { failOn: 'none' }).metadata()
+      const thumbnailBytes = await sharp(tempImagePath, { failOn: 'none' })
+        .rotate()
+        .resize(task.thumbnailSize, task.thumbnailSize, {
+          fit: 'cover',
+          position: 'attention'
+        })
+        .webp({ quality: task.thumbnailQuality })
+        .toBuffer()
+
+      return {
+        width: metadata.width ?? null,
+        height: metadata.height ?? null,
+        thumbnailBytes
+      }
+    } catch (fallbackError) {
+      throw new Error(resolveImageThumbnailErrorMessage(task.filePath, sharpError, fallbackError))
+    } finally {
+      await fs.rm(tempImagePath, { force: true })
+    }
+  }
+}
+
+function normalizeHeicQuality(quality: number): number {
+  const normalized = quality / 100
+  if (normalized < 0) {
+    return 0
+  }
+
+  if (normalized > 1) {
+    return 1
+  }
+
+  return normalized
+}
+
+function resolveImageThumbnailSharpErrorMessage(filePath: string, sharpError: unknown): string {
+  const sharpMessage = sharpError instanceof Error ? sharpError.message : 'unknown sharp error'
+  return `图片缩略图失败: ${basename(filePath)}；sharp=${sharpMessage}`
+}
+
+function resolveImageThumbnailErrorMessage(filePath: string, sharpError: unknown, fallbackError: unknown): string {
+  const sharpMessage = sharpError instanceof Error ? sharpError.message : 'unknown sharp error'
+  const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'unknown heic-convert fallback error'
+
+  return `图片缩略图失败: ${basename(filePath)}；sharp=${sharpMessage}；heic-convert-fallback=${fallbackMessage}`
 }
 
 async function safeReadMetadata(filePath: string, ignoreLocationData: boolean): Promise<unknown> {

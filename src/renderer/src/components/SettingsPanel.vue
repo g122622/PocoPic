@@ -164,24 +164,30 @@ function parseUnit(value: string): FileSizeUnit | null {
       </div>
       <div class="flex gap-3">
         <UInput :model-value="settings.indexDbPath" readonly class="cute-input flex-1" size="lg" color="white" variant="outline" :ui="{ rounded: 'rounded-2xl' }" />
-        <UButton class="cute-button" size="lg" color="primary" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseIndexDbPath')" />
-        <UButton
-          class="cute-button"
-          size="lg"
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-external-link"
-          label="打开"
-          :disabled="!settings.indexDbPath"
-          @click="emit('openPath', settings.indexDbPath)"
-        />
+        <UTooltip :delay-duration="0" text="选择元数据索引数据库路径">
+          <UButton class="cute-button" size="lg" color="primary" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseIndexDbPath')" />
+        </UTooltip>
+        <UTooltip :delay-duration="0" text="打开元数据索引数据库所在目录">
+          <UButton
+            class="cute-button"
+            size="lg"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-external-link"
+            label="打开"
+            :disabled="!settings.indexDbPath"
+            @click="emit('openPath', settings.indexDbPath)"
+          />
+        </UTooltip>
       </div>
       <div class="flex items-center justify-between mt-2 rounded-2xl bg-white/60 p-3 dark:bg-slate-900/60">
         <div class="flex items-center gap-2">
           <UIcon name="i-lucide-hard-drive" class="h-4 w-4 text-slate-400" />
           <span class="text-sm font-medium text-slate-600 dark:text-slate-300">索引大小：<span class="font-bold text-primary-600 dark:text-primary-400">{{ formatBytes(storageStats.indexDbBytes) }}</span></span>
         </div>
-        <UButton class="cute-button" color="rose" variant="soft" size="sm" icon="i-lucide-trash-2" label="清除索引" @click="emit('clearIndexDb')" />
+        <UTooltip :delay-duration="0" text="清空元数据索引数据库">
+          <UButton class="cute-button" color="rose" variant="soft" size="sm" icon="i-lucide-trash-2" label="清除索引" @click="emit('clearIndexDb')" />
+        </UTooltip>
       </div>
     </div>
 
@@ -192,24 +198,30 @@ function parseUnit(value: string): FileSizeUnit | null {
       </div>
       <div class="flex gap-3">
         <UInput :model-value="settings.thumbnailDir" readonly class="cute-input flex-1" size="lg" color="white" variant="outline" :ui="{ rounded: 'rounded-2xl' }" />
-        <UButton class="cute-button" size="lg" color="emerald" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseThumbnailDir')" />
-        <UButton
-          class="cute-button"
-          size="lg"
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-external-link"
-          label="打开"
-          :disabled="!settings.thumbnailDir"
-          @click="emit('openPath', settings.thumbnailDir)"
-        />
+        <UTooltip :delay-duration="0" text="选择缩略图存储目录">
+          <UButton class="cute-button" size="lg" color="emerald" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseThumbnailDir')" />
+        </UTooltip>
+        <UTooltip :delay-duration="0" text="打开缩略图目录">
+          <UButton
+            class="cute-button"
+            size="lg"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-external-link"
+            label="打开"
+            :disabled="!settings.thumbnailDir"
+            @click="emit('openPath', settings.thumbnailDir)"
+          />
+        </UTooltip>
       </div>
       <div class="flex items-center justify-between mt-2 rounded-2xl bg-white/60 p-3 dark:bg-slate-900/60">
         <div class="flex items-center gap-2">
           <UIcon name="i-lucide-hard-drive" class="h-4 w-4 text-slate-400" />
           <span class="text-sm font-medium text-slate-600 dark:text-slate-300">缩略图大小：<span class="font-bold text-emerald-600 dark:text-emerald-400">{{ formatBytes(storageStats.thumbnailBytes) }}</span></span>
         </div>
-        <UButton class="cute-button" color="rose" variant="soft" size="sm" icon="i-lucide-trash-2" label="清除缩略图" @click="emit('clearThumbnails')" />
+        <UTooltip :delay-duration="0" text="清空全部缩略图缓存">
+          <UButton class="cute-button" color="rose" variant="soft" size="sm" icon="i-lucide-trash-2" label="清除缩略图" @click="emit('clearThumbnails')" />
+        </UTooltip>
       </div>
     </div>
 
@@ -220,17 +232,21 @@ function parseUnit(value: string): FileSizeUnit | null {
       </div>
       <div class="flex gap-3">
         <UInput :model-value="settings.tmpDir" readonly class="cute-input flex-1" size="lg" color="white" variant="outline" :ui="{ rounded: 'rounded-2xl' }" />
-        <UButton class="cute-button" size="lg" color="cyan" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseTmpDir')" />
-        <UButton
-          class="cute-button"
-          size="lg"
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-external-link"
-          label="打开"
-          :disabled="!settings.tmpDir"
-          @click="emit('openPath', settings.tmpDir)"
-        />
+        <UTooltip :delay-duration="0" text="选择构建临时目录">
+          <UButton class="cute-button" size="lg" color="cyan" variant="soft" icon="i-lucide-folder-search" label="选择" @click="emit('chooseTmpDir')" />
+        </UTooltip>
+        <UTooltip :delay-duration="0" text="打开临时目录">
+          <UButton
+            class="cute-button"
+            size="lg"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-external-link"
+            label="打开"
+            :disabled="!settings.tmpDir"
+            @click="emit('openPath', settings.tmpDir)"
+          />
+        </UTooltip>
       </div>
       <p class="text-xs text-slate-500 dark:text-slate-400">视频抽帧会写入临时文件，此项必须手动配置。</p>
     </div>
@@ -241,7 +257,9 @@ function parseUnit(value: string): FileSizeUnit | null {
           <UIcon name="i-lucide-folder-open" class="h-4 w-4 text-amber-500" />
           <label class="text-sm font-bold text-slate-700 dark:text-slate-200">扫描目录</label>
         </div>
-        <UButton class="cute-button" color="amber" variant="soft" size="sm" icon="i-lucide-plus" label="添加目录" @click="emit('addSourceDir')" />
+        <UTooltip :delay-duration="0" text="添加新的扫描目录">
+          <UButton class="cute-button" color="amber" variant="soft" size="sm" icon="i-lucide-plus" label="添加目录" @click="emit('addSourceDir')" />
+        </UTooltip>
       </div>
       <ul class="max-h-48 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
         <li
@@ -256,8 +274,12 @@ function parseUnit(value: string): FileSizeUnit | null {
             <span class="truncate text-sm font-medium text-slate-700 dark:text-slate-300" :title="dir">{{ dir }}</span>
           </div>
           <div class="flex gap-2 shrink-0">
-            <UButton class="cute-button" size="sm" color="neutral" variant="soft" icon="i-lucide-external-link" @click="emit('openPath', dir)" />
-            <UButton class="cute-button" size="sm" color="rose" variant="soft" icon="i-lucide-x" @click="emit('removeSourceDir', dir)" />
+            <UTooltip :delay-duration="0" text="打开该扫描目录">
+              <UButton class="cute-button" size="sm" color="neutral" variant="soft" icon="i-lucide-external-link" @click="emit('openPath', dir)" />
+            </UTooltip>
+            <UTooltip :delay-duration="0" text="移除该扫描目录">
+              <UButton class="cute-button" size="sm" color="rose" variant="soft" icon="i-lucide-x" @click="emit('removeSourceDir', dir)" />
+            </UTooltip>
           </div>
         </li>
       </ul>
@@ -285,7 +307,9 @@ function parseUnit(value: string): FileSizeUnit | null {
             :ui="{ rounded: 'rounded-xl' }"
             @update:model-value="onDirectoryKeywordInputChange"
           />
-          <UButton class="cute-button" size="md" color="amber" variant="soft" icon="i-lucide-plus" label="添加" @click="addDirectoryKeyword" />
+          <UTooltip :delay-duration="0" text="添加目录关键字排除规则">
+            <UButton class="cute-button" size="md" color="amber" variant="soft" icon="i-lucide-plus" label="添加" @click="addDirectoryKeyword" />
+          </UTooltip>
         </div>
         <div class="flex flex-wrap gap-2">
           <div
@@ -294,9 +318,11 @@ function parseUnit(value: string): FileSizeUnit | null {
             class="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
           >
             <span>{{ keyword }}</span>
-            <button class="text-amber-600 hover:text-rose-500" type="button" @click="removeDirectoryKeyword(keyword)">
-              <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
-            </button>
+            <UTooltip :delay-duration="0" :text="`删除目录关键字：${keyword}`">
+              <button class="text-amber-600 hover:text-rose-500" type="button" @click="removeDirectoryKeyword(keyword)">
+                <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
+              </button>
+            </UTooltip>
           </div>
         </div>
       </div>
@@ -317,7 +343,9 @@ function parseUnit(value: string): FileSizeUnit | null {
             :ui="{ rounded: 'rounded-xl' }"
             @update:model-value="onFileKeywordInputChange"
           />
-          <UButton class="cute-button" size="md" color="cyan" variant="soft" icon="i-lucide-plus" label="添加" @click="addFileKeyword" />
+          <UTooltip :delay-duration="0" text="添加文件关键字排除规则">
+            <UButton class="cute-button" size="md" color="cyan" variant="soft" icon="i-lucide-plus" label="添加" @click="addFileKeyword" />
+          </UTooltip>
         </div>
         <div class="flex flex-wrap gap-2">
           <div
@@ -326,9 +354,11 @@ function parseUnit(value: string): FileSizeUnit | null {
             class="flex items-center gap-2 rounded-xl bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
           >
             <span>{{ keyword }}</span>
-            <button class="text-cyan-600 hover:text-rose-500" type="button" @click="removeFileKeyword(keyword)">
-              <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
-            </button>
+            <UTooltip :delay-duration="0" :text="`删除文件关键字：${keyword}`">
+              <button class="text-cyan-600 hover:text-rose-500" type="button" @click="removeFileKeyword(keyword)">
+                <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
+              </button>
+            </UTooltip>
           </div>
         </div>
       </div>
@@ -456,12 +486,14 @@ function parseUnit(value: string): FileSizeUnit | null {
         <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-50 text-violet-500 dark:bg-violet-900/30 dark:text-violet-400">
           <UIcon name="i-lucide-map-pin-off" class="h-4 w-4" />
         </div>
-        <USwitch
-          :model-value="settings.ignoreLocationData"
-          color="violet"
-          size="md"
-          @update:model-value="(value) => emit('updateSettings', { ignoreLocationData: value })"
-        />
+        <UTooltip :delay-duration="0" text="构建时忽略位置信息解析">
+          <USwitch
+            :model-value="settings.ignoreLocationData"
+            color="violet"
+            size="md"
+            @update:model-value="(value) => emit('updateSettings', { ignoreLocationData: value })"
+          />
+        </UTooltip>
         <span class="text-sm font-bold text-slate-700 dark:text-slate-200 pr-2">构建时忽略位置数据</span>
       </div>
     </div>

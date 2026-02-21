@@ -36,7 +36,7 @@ const emit = defineEmits<{
       <UProgress :model-value="progressPercent" color="primary" size="md" class="rounded-full" />
     </div>
 
-    <div class="grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+    <div class="grid grid-cols-4 gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
       <div class="flex flex-col gap-1">
         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">总数</span>
         <span class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ status.total }}</span>
@@ -55,7 +55,7 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <div class="space-y-2 rounded-2xl bg-slate-50/50 p-3 dark:bg-slate-800/30">
+    <div class="space-y-2 rounded-2xl bg-slate-50/50 p-3 dark:bg-slate-800/30 grid grid-cols-2 gap-3">
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-folder" class="h-4 w-4 text-slate-400 shrink-0" />
         <p class="truncate text-xs font-medium text-slate-600 dark:text-slate-300" :title="status.currentDirectory || '-'">
@@ -71,10 +71,18 @@ const emit = defineEmits<{
     </div>
 
     <div class="flex flex-wrap gap-3 pt-2">
-      <UButton class="cute-button flex-1" size="md" color="primary" icon="i-lucide-play" label="开始" :disabled="status.state === 'running' || status.state === 'paused'" @click="emit('start')" />
-      <UButton class="cute-button flex-1" size="md" color="amber" variant="soft" icon="i-lucide-pause" label="暂停" :disabled="status.state !== 'running'" @click="emit('pause')" />
-      <UButton class="cute-button flex-1" size="md" color="emerald" variant="soft" icon="i-lucide-play-circle" label="继续" :disabled="status.state !== 'paused'" @click="emit('resume')" />
-      <UButton class="cute-button flex-1" size="md" color="rose" variant="soft" icon="i-lucide-square" label="取消" :disabled="status.state === 'idle'" @click="emit('cancel')" />
+      <UTooltip :delay-duration="0" text="开始新的构建任务">
+        <UButton class="cute-button flex-1" size="md" color="primary" icon="i-lucide-play" label="开始" :disabled="status.state === 'running' || status.state === 'paused'" @click="emit('start')" />
+      </UTooltip>
+      <UTooltip :delay-duration="0" text="暂停当前构建进程">
+        <UButton class="cute-button flex-1" size="md" color="amber" variant="soft" icon="i-lucide-pause" label="暂停" :disabled="status.state !== 'running'" @click="emit('pause')" />
+      </UTooltip>
+      <UTooltip :delay-duration="0" text="继续执行已暂停任务">
+        <UButton class="cute-button flex-1" size="md" color="emerald" variant="soft" icon="i-lucide-play-circle" label="继续" :disabled="status.state !== 'paused'" @click="emit('resume')" />
+      </UTooltip>
+      <UTooltip :delay-duration="0" text="取消当前构建任务">
+        <UButton class="cute-button flex-1" size="md" color="rose" variant="soft" icon="i-lucide-square" label="取消" :disabled="status.state === 'idle'" @click="emit('cancel')" />
+      </UTooltip>
     </div>
   </div>
 </template>
