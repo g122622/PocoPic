@@ -1,18 +1,22 @@
 export function formatBytes(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`
+  return prettyBytes(bytes, 2)
+}
+
+export function prettyBytes(bytes: number, decimals?: number): string {
+  const parsed = Number.parseInt(String(bytes), 10)
+  if (Number.isNaN(parsed)) {
+    return 'unknown'
   }
 
-  const units = ['KB', 'MB', 'GB', 'TB']
-  let value = bytes / 1024
-  let unitIndex = 0
-
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024
-    unitIndex += 1
+  if (bytes === 0) {
+    return '0 Bytes'
   }
 
-  return `${value.toFixed(2)} ${units[unitIndex]}`
+  const k = 1024
+  const dm = decimals !== undefined && decimals <= 0 ? 0 : (decimals ?? 2)
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
 export function formatTime(timestamp: number): string {

@@ -227,36 +227,6 @@ function onQualityChange(value: string): void {
         />
         <span class="text-sm font-bold text-slate-700 dark:text-slate-200 pr-2">构建时忽略位置数据</span>
       </div>
-
-      <div class="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
-        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-500 dark:bg-sky-900/30 dark:text-sky-400">
-          <UIcon name="i-lucide-palette" class="h-4 w-4" />
-        </div>
-        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">主题</span>
-        <div class="flex gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl">
-          <button
-            class="rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300"
-            :class="settings.colorMode === 'system' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
-            @click="emit('updateSettings', { colorMode: 'system' })"
-          >
-            跟随系统
-          </button>
-          <button
-            class="rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300"
-            :class="settings.colorMode === 'light' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
-            @click="emit('updateSettings', { colorMode: 'light' })"
-          >
-            浅色
-          </button>
-          <button
-            class="rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300"
-            :class="settings.colorMode === 'dark' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
-            @click="emit('updateSettings', { colorMode: 'dark' })"
-          >
-            深色
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>

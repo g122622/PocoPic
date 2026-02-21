@@ -14,6 +14,11 @@ const uiError = ref('')
 const startDateMs = ref<number | null>(null)
 const endDateMs = ref<number | null>(null)
 const mediaGridRef = ref<MediaVirtualGridExposed | null>(null)
+const gridSize = ref<'sm' | 'md' | 'lg'>('md')
+
+function onGridSizeChange(value: 'sm' | 'md' | 'lg'): void {
+  gridSize.value = value
+}
 
 async function handleAction(action: () => Promise<void>): Promise<void> {
   try {
@@ -62,9 +67,11 @@ watch(
     <SearchToolbar
       :keyword="store.keyword"
       :favorites-only="store.favoritesOnly"
+      :grid-size="gridSize"
       @update-keyword="store.setKeyword"
       @update-date-range="onDateRangePatch"
       @update-favorites-only="store.setFavoritesOnly"
+      @update-grid-size="onGridSizeChange"
       @apply="() => handleAction(store.applyFilters)"
     />
 
@@ -85,6 +92,7 @@ watch(
           :total="store.total"
           :get-item="store.getMediaByIndex"
           :get-thumbnail-url="store.toThumbnailUrl"
+          :size-level="gridSize"
           @need-range="(start, end) => handleAction(() => store.ensureRangeLoaded(start, end))"
           @open-media="(filePath) => handleAction(() => store.openMedia(filePath))"
           @toggle-favorite="
