@@ -2,7 +2,7 @@ import { app } from 'electron'
 import { cpus } from 'node:os'
 import { dirname, join } from 'node:path'
 import { promises as fs } from 'node:fs'
-import type { AppSettings } from '../../shared/types'
+import type { AppSettings, FileSizeUnit } from '../../shared/types'
 
 interface PartialSettings extends Partial<AppSettings> {}
 
@@ -22,6 +22,12 @@ export class SettingsService {
       thumbnailDir: raw.thumbnailDir ?? '',
       tmpDir: raw.tmpDir ?? '',
       sourceDirs: raw.sourceDirs ?? [],
+      excludeDirKeywords: this._normalizeKeywords(raw.excludeDirKeywords),
+      excludeFileKeywords: this._normalizeKeywords(raw.excludeFileKeywords),
+      excludeFileSizeLessThan: this._normalizeSizeValue(raw.excludeFileSizeLessThan),
+      excludeFileSizeLessThanUnit: this._normalizeSizeUnit(raw.excludeFileSizeLessThanUnit),
+      excludeFileSizeGreaterThan: this._normalizeSizeValue(raw.excludeFileSizeGreaterThan),
+      excludeFileSizeGreaterThanUnit: this._normalizeSizeUnit(raw.excludeFileSizeGreaterThanUnit),
       workerCount: raw.workerCount ?? workerCountDefault,
       thumbnailSize: raw.thumbnailSize ?? 256,
       thumbnailQuality: raw.thumbnailQuality ?? 80,
@@ -52,5 +58,40 @@ export class SettingsService {
     } catch {
       return {}
     }
+  }
+
+  private _normalizeKeywords(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+      return []
+    }
+
+    const result: string[] = []
+    for (const item of value) {
+      if (typeof item !== 'string') {
+        continue
+      }
+      const keyword = item.trim()
+      if (keyword.length > 0) {
+        result.push(keyword)
+      }
+    }
+
+    return result
+  }
+
+  private _normalizeSizeValue(value: unknown): number | null {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+      return null
+    }
+
+    return value
+  }
+
+  private _normalizeSizeUnit(value: unknown): FileSizeUnit {
+    if (value === 'MB' || value === 'GB') {
+      return value
+    }
+
+    return 'KB'
   }
 }

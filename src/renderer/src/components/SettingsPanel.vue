@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { AppSettings, StorageStats } from '@shared/types'
+import { ref } from 'vue'
+import type { AppSettings, FileSizeUnit, StorageStats } from '@shared/types'
 import { formatBytes } from '@renderer/utils/format'
 
-defineProps<{
+const props = defineProps<{
   settings: AppSettings
   storageStats: StorageStats
 }>()
@@ -18,6 +19,10 @@ const emit = defineEmits<{
   clearIndexDb: []
   clearThumbnails: []
 }>()
+
+const directoryKeywordInput = ref('')
+const fileKeywordInput = ref('')
+const sizeUnits: FileSizeUnit[] = ['KB', 'MB', 'GB']
 
 function onWorkerCountChange(value: string): void {
   const parsed = Number(value)
@@ -38,6 +43,108 @@ function onQualityChange(value: string): void {
   if (Number.isFinite(parsed) && parsed >= 20 && parsed <= 100) {
     emit('updateSettings', { thumbnailQuality: parsed })
   }
+}
+
+function addDirectoryKeyword(): void {
+  const keyword = directoryKeywordInput.value.trim()
+  if (!keyword) {
+    return
+  }
+
+  const next = [...props.settings.excludeDirKeywords]
+  if (!next.includes(keyword)) {
+    next.push(keyword)
+    emit('updateSettings', { excludeDirKeywords: next })
+  }
+  directoryKeywordInput.value = ''
+}
+
+function onDirectoryKeywordInputChange(value: string): void {
+  directoryKeywordInput.value = value
+}
+
+function removeDirectoryKeyword(keyword: string): void {
+  const next: string[] = []
+  for (const item of props.settings.excludeDirKeywords) {
+    if (item !== keyword) {
+      next.push(item)
+    }
+  }
+  emit('updateSettings', { excludeDirKeywords: next })
+}
+
+function addFileKeyword(): void {
+  const keyword = fileKeywordInput.value.trim()
+  if (!keyword) {
+    return
+  }
+
+  const next = [...props.settings.excludeFileKeywords]
+  if (!next.includes(keyword)) {
+    next.push(keyword)
+    emit('updateSettings', { excludeFileKeywords: next })
+  }
+  fileKeywordInput.value = ''
+}
+
+function onFileKeywordInputChange(value: string): void {
+  fileKeywordInput.value = value
+}
+
+function removeFileKeyword(keyword: string): void {
+  const next: string[] = []
+  for (const item of props.settings.excludeFileKeywords) {
+    if (item !== keyword) {
+      next.push(item)
+    }
+  }
+  emit('updateSettings', { excludeFileKeywords: next })
+}
+
+function onExcludeSizeLessThanChange(value: string): void {
+  if (!value.trim()) {
+    emit('updateSettings', { excludeFileSizeLessThan: null })
+    return
+  }
+
+  const parsed = Number(value)
+  if (Number.isFinite(parsed) && parsed > 0) {
+    emit('updateSettings', { excludeFileSizeLessThan: parsed })
+  }
+}
+
+function onExcludeSizeGreaterThanChange(value: string): void {
+  if (!value.trim()) {
+    emit('updateSettings', { excludeFileSizeGreaterThan: null })
+    return
+  }
+
+  const parsed = Number(value)
+  if (Number.isFinite(parsed) && parsed > 0) {
+    emit('updateSettings', { excludeFileSizeGreaterThan: parsed })
+  }
+}
+
+function onExcludeSizeLessThanUnitChange(value: string): void {
+  const unit = parseUnit(value)
+  if (unit) {
+    emit('updateSettings', { excludeFileSizeLessThanUnit: unit })
+  }
+}
+
+function onExcludeSizeGreaterThanUnitChange(value: string): void {
+  const unit = parseUnit(value)
+  if (unit) {
+    emit('updateSettings', { excludeFileSizeGreaterThanUnit: unit })
+  }
+}
+
+function parseUnit(value: string): FileSizeUnit | null {
+  if (value === 'KB' || value === 'MB' || value === 'GB') {
+    return value
+  }
+
+  return null
 }
 </script>
 
@@ -154,6 +261,136 @@ function onQualityChange(value: string): void {
           </div>
         </li>
       </ul>
+    </div>
+
+    <div class="space-y-4 rounded-3xl bg-slate-50/50 p-6 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50">
+      <div class="flex items-center gap-2 mb-1">
+        <UIcon name="i-lucide-filter" class="h-4 w-4 text-rose-500" />
+        <label class="text-sm font-bold text-slate-700 dark:text-slate-200">排除文件/目录</label>
+      </div>
+
+      <div class="space-y-3 rounded-2xl bg-white/70 p-4 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-folder-x" class="h-4 w-4 text-amber-500" />
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">目录关键字排除</h3>
+        </div>
+        <div class="flex gap-3">
+          <UInput
+            :model-value="directoryKeywordInput"
+            class="cute-input flex-1"
+            size="md"
+            color="white"
+            variant="outline"
+            placeholder="例如：node_modules、缓存"
+            :ui="{ rounded: 'rounded-xl' }"
+            @update:model-value="onDirectoryKeywordInputChange"
+          />
+          <UButton class="cute-button" size="md" color="amber" variant="soft" icon="i-lucide-plus" label="添加" @click="addDirectoryKeyword" />
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="keyword in settings.excludeDirKeywords"
+            :key="`dir-${keyword}`"
+            class="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+          >
+            <span>{{ keyword }}</span>
+            <button class="text-amber-600 hover:text-rose-500" type="button" @click="removeDirectoryKeyword(keyword)">
+              <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3 rounded-2xl bg-white/70 p-4 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-file-x" class="h-4 w-4 text-cyan-500" />
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">文件关键字排除</h3>
+        </div>
+        <div class="flex gap-3">
+          <UInput
+            :model-value="fileKeywordInput"
+            class="cute-input flex-1"
+            size="md"
+            color="white"
+            variant="outline"
+            placeholder="例如：_tmp、draft"
+            :ui="{ rounded: 'rounded-xl' }"
+            @update:model-value="onFileKeywordInputChange"
+          />
+          <UButton class="cute-button" size="md" color="cyan" variant="soft" icon="i-lucide-plus" label="添加" @click="addFileKeyword" />
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="keyword in settings.excludeFileKeywords"
+            :key="`file-${keyword}`"
+            class="flex items-center gap-2 rounded-xl bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
+          >
+            <span>{{ keyword }}</span>
+            <button class="text-cyan-600 hover:text-rose-500" type="button" @click="removeFileKeyword(keyword)">
+              <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3 rounded-2xl bg-white/70 p-4 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-scale" class="h-4 w-4 text-indigo-500" />
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">文件大小排除</h3>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">忽略小于该值的文件</label>
+            <div class="flex gap-2">
+              <UInput
+                type="number"
+                class="cute-input flex-1"
+                size="md"
+                color="white"
+                variant="outline"
+                :ui="{ rounded: 'rounded-xl' }"
+                :model-value="settings.excludeFileSizeLessThan === null ? '' : String(settings.excludeFileSizeLessThan)"
+                placeholder="留空表示不限制"
+                @update:model-value="onExcludeSizeLessThanChange"
+              />
+              <select
+                class="rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                :value="settings.excludeFileSizeLessThanUnit"
+                @change="onExcludeSizeLessThanUnitChange(($event.target as HTMLSelectElement).value)"
+              >
+                <option v-for="unit in sizeUnits" :key="`min-${unit}`" :value="unit">{{ unit }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">忽略大于该值的文件</label>
+            <div class="flex gap-2">
+              <UInput
+                type="number"
+                class="cute-input flex-1"
+                size="md"
+                color="white"
+                variant="outline"
+                :ui="{ rounded: 'rounded-xl' }"
+                :model-value="settings.excludeFileSizeGreaterThan === null ? '' : String(settings.excludeFileSizeGreaterThan)"
+                placeholder="留空表示不限制"
+                @update:model-value="onExcludeSizeGreaterThanChange"
+              />
+              <select
+                class="rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                :value="settings.excludeFileSizeGreaterThanUnit"
+                @change="onExcludeSizeGreaterThanUnitChange(($event.target as HTMLSelectElement).value)"
+              >
+                <option v-for="unit in sizeUnits" :key="`max-${unit}`" :value="unit">{{ unit }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">目录关键字命中时会跳过该目录及其全部子目录，文件规则仅作用于媒体文件。</p>
+      </div>
     </div>
 
     <div class="flex items-center gap-3 mb-2 mt-8">

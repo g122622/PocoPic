@@ -1,10 +1,18 @@
 export type MediaType = 'image' | 'video'
 
+export type FileSizeUnit = 'KB' | 'MB' | 'GB'
+
 export interface AppSettings {
   indexDbPath: string
   thumbnailDir: string
   tmpDir: string
   sourceDirs: string[]
+  excludeDirKeywords: string[]
+  excludeFileKeywords: string[]
+  excludeFileSizeLessThan: number | null
+  excludeFileSizeLessThanUnit: FileSizeUnit
+  excludeFileSizeGreaterThan: number | null
+  excludeFileSizeGreaterThanUnit: FileSizeUnit
   workerCount: number
   thumbnailSize: number
   thumbnailQuality: number

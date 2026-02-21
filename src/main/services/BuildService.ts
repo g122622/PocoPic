@@ -135,7 +135,7 @@ export class BuildService extends EventEmitter {
 
   private async _runBuild(settings: AppSettings): Promise<void> {
     const scannedFiles = await this._scannerService.scan(
-      settings.sourceDirs,
+      settings,
       (directory, file) => {
         this._status = {
           ...this._status,
