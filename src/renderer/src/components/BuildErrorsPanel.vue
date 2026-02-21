@@ -190,25 +190,25 @@ function resolveMessageSignature(message: string): string {
 </script>
 
 <template>
-  <div class="cute-panel flex h-full min-h-0 flex-col space-y-4 p-6">
+  <div class="cute-panel flex h-full min-h-0 flex-col space-y-3 p-4">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-900/50 dark:text-rose-300">
-          <UIcon name="i-lucide-alert-triangle" class="h-5 w-5" />
+      <div class="flex items-center gap-2">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100 text-rose-500 dark:bg-rose-900/50 dark:text-rose-300">
+          <UIcon name="i-lucide-alert-triangle" class="h-4 w-4" />
         </div>
-        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">构建错误</h2>
+        <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">构建错误</h2>
       </div>
       <div class="flex items-center gap-2">
-        <span class="rounded-full bg-rose-100 px-3 py-1 text-[11px] font-bold text-rose-600 dark:bg-rose-900/40 dark:text-rose-300">
+        <span class="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:bg-rose-900/40 dark:text-rose-300">
           {{ groupedErrors.length }} 类 / {{ errors.length }} 条
         </span>
         <UTooltip :delay-duration="0" text="清空全部构建错误记录">
-          <UButton class="cute-button" size="sm" color="rose" variant="soft" icon="i-lucide-trash-2" label="清空" @click="emit('clear')" />
+          <UButton class="cute-button" size="xs" color="rose" variant="soft" icon="i-lucide-trash-2" label="清空" @click="emit('clear')" />
         </UTooltip>
       </div>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-hidden rounded-2xl border border-rose-100/50 bg-rose-50/30 dark:border-rose-800/30 dark:bg-rose-900/10">
+    <div class="min-h-0 flex-1 overflow-hidden rounded-xl border border-rose-100/50 bg-rose-50/30 dark:border-rose-800/30 dark:bg-rose-900/10">
       <UTable
         :data="groupedErrors"
         :columns="columns"

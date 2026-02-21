@@ -80,6 +80,10 @@ async function handleAction(action: () => Promise<void>): Promise<void> {
   }
 }
 
+async function handleToggleDevTools(): Promise<void> {
+  await handleAction(() => window.api.toggleDevTools())
+}
+
 async function handleMinimizeWindow(): Promise<void> {
   await handleAction(() => window.api.minimizeWindow())
 }
@@ -99,16 +103,19 @@ async function handleCloseWindow(): Promise<void> {
 <template>
   <UApp>
     <div class="app-shell h-screen w-screen" :class="isWindowMaximized ? 'p-0' : 'p-3'">
-      <div class="app-frame relative flex h-full min-h-0 flex-col"
-        :class="isWindowMaximized ? 'rounded-none' : 'rounded-[18px]'">
+      <div class="app-frame relative flex h-full min-h-0 flex-col rounded-none">
         <header
           class="drag-region flex h-11 items-center justify-between border-b border-white/40 px-3 dark:border-white/10"
           @dblclick="handleToggleMaximizeWindow">
           <div class="flex items-center gap-2">
-              <img :src="appLogo" alt="PocoPic" class="w-7 ml-1 object-contain" />
-            <p class="text-xs font-bold tracking-wide text-slate-600 dark:text-slate-300">PocoPic</p>
+              <img :src="appLogo" alt="PocoPic" class="w-7 ml-1 mr-1 object-contain" />
+            <p class="text-md font-bold tracking-wide text-slate-600 dark:text-slate-300">PocoPic</p>
           </div>
           <div class="no-drag flex items-center gap-1">
+            <UTooltip :delay-duration="0" text="切换开发者工具">
+              <UButton class="window-button" size="md" color="neutral" variant="ghost" icon="i-lucide-terminal"
+                aria-label="切换开发者工具" @click="handleToggleDevTools" />
+            </UTooltip>
             <UTooltip :delay-duration="0" text="最小化窗口">
               <UButton class="window-button" size="md" color="neutral" variant="ghost" icon="i-lucide-minus"
                 aria-label="最小化窗口" @click="handleMinimizeWindow" />
@@ -150,7 +157,7 @@ async function handleCloseWindow(): Promise<void> {
 
                 <div
                   class="rounded-2xl border border-slate-100 bg-white/70 p-2 dark:border-slate-800 dark:bg-slate-900/70">
-                  <div class="flex items-center justify-center gap-1 no-drag">
+                  <div class="flex items-center justify-center gap-1 no-drag" :class="isSidebarCollapsed ? 'flex-col' : ''">
                     <UTooltip :delay-duration="0" text="切换为跟随系统主题">
                       <UButton size="sm" color="neutral" :variant="isColorModeActive('system') ? 'solid' : 'ghost'"
                         icon="i-lucide-monitor" aria-label="跟随系统主题"
@@ -167,7 +174,7 @@ async function handleCloseWindow(): Promise<void> {
                         @click="() => handleAction(() => store.setColorMode('dark'))" />
                     </UTooltip>
                     <UTooltip :delay-duration="0" :text="isSidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'">
-                      <UButton class="ml-auto" color="neutral" variant="ghost" size="sm"
+                      <UButton :class="isSidebarCollapsed ? 'mt-auto' : 'ml-auto'" color="neutral" variant="ghost" size="sm"
                         :icon="isSidebarCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
                         :aria-label="isSidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'" @click="toggleSidebar" />
                     </UTooltip>

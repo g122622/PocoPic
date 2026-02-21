@@ -45,6 +45,7 @@ const api = {
 
   minimizeWindow: (): Promise<void> => electronAPI.ipcRenderer.invoke('window:minimize'),
   toggleMaximizeWindow: (): Promise<void> => electronAPI.ipcRenderer.invoke('window:toggle-maximize'),
+  toggleDevTools: (): Promise<void> => electronAPI.ipcRenderer.invoke('window:toggle-devtools'),
   closeWindow: (): Promise<void> => electronAPI.ipcRenderer.invoke('window:close'),
   isWindowMaximized: (): Promise<boolean> => electronAPI.ipcRenderer.invoke('window:is-maximized'),
 

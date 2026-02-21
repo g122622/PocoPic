@@ -37,6 +37,7 @@ export const useGalleryStore = defineStore('gallery', () => {
   const total = ref(0)
   const yearBuckets = ref<YearTimelineBucket[]>([])
   const scrollTargetIndex = ref<number | null>(null)
+  const albumScrollTop = ref(0)
 
   const cache = ref(new Map<number, MediaItem>())
   const loadingPages = ref(new Set<number>())
@@ -311,6 +312,10 @@ export const useGalleryStore = defineStore('gallery', () => {
     return index
   }
 
+  function setAlbumScrollTop(value: number): void {
+    albumScrollTop.value = value
+  }
+
   async function setColorMode(mode: 'system' | 'light' | 'dark'): Promise<void> {
     await updateSettings({ colorMode: mode })
   }
@@ -354,6 +359,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     total,
     yearBuckets,
     scrollTargetIndex,
+    albumScrollTop,
     hasEssentialSettings,
     needFirstRunSetup,
     progressPercent,
@@ -387,6 +393,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     refreshYearBuckets,
     jumpToYear,
     jumpToMonth,
-    consumeScrollTargetIndex
+    consumeScrollTargetIndex,
+    setAlbumScrollTop
   }
 })

@@ -207,6 +207,15 @@ export function registerIpc(params: RegisterIpcParams): void {
     window.maximize()
   })
 
+  ipcMain.handle('window:toggle-devtools', () => {
+    const window = getWindow()
+    if (!window) {
+      throw new Error('主窗口未初始化。')
+    }
+
+    window.webContents.toggleDevTools()
+  })
+
   ipcMain.handle('window:close', () => {
     const window = getWindow()
     if (!window) {

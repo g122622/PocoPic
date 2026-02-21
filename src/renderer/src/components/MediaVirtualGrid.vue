@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch
+} from 'vue'
 import type { MediaItem } from '@shared/types'
 import { formatTime, prettyBytes } from '@renderer/utils/format'
 
@@ -8,12 +17,14 @@ const props = defineProps<{
   getItem: (index: number) => MediaItem | null
   getThumbnailUrl: (path: string) => string
   sizeLevel: 'sm' | 'md' | 'lg'
+  initialScrollTop: number
 }>()
 
 const emit = defineEmits<{
   needRange: [start: number, end: number]
   openMedia: [filePath: string]
   toggleFavorite: [id: number, isFavorite: boolean]
+  updateScrollTop: [value: number]
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
@@ -101,7 +112,32 @@ function onScroll(): void {
   if (!containerRef.value) {
     return
   }
+
   scrollTop.value = containerRef.value.scrollTop
+  emit('updateScrollTop', scrollTop.value)
+}
+
+function _syncViewportMetrics(): void {
+  if (!containerRef.value) {
+    return
+  }
+
+  containerWidth.value = containerRef.value.clientWidth
+  containerHeight.value = containerRef.value.clientHeight
+  scrollTop.value = containerRef.value.scrollTop
+}
+
+function _restoreScrollTop(): void {
+  if (!containerRef.value) {
+    return
+  }
+
+  containerRef.value.scrollTo({
+    top: props.initialScrollTop,
+    behavior: 'auto'
+  })
+
+  scrollTop.value = props.initialScrollTop
 }
 
 onMounted(() => {
@@ -109,15 +145,31 @@ onMounted(() => {
     return
   }
 
-  containerWidth.value = containerRef.value.clientWidth
-  containerHeight.value = containerRef.value.clientHeight
+  _syncViewportMetrics()
+  _restoreScrollTop()
+
   resizeObserver = new ResizeObserver((entries) => {
     if (entries.length > 0) {
       containerWidth.value = entries[0].contentRect.width
       containerHeight.value = entries[0].contentRect.height
+      scrollTop.value = containerRef.value?.scrollTop ?? 0
     }
   })
+
   resizeObserver.observe(containerRef.value)
+})
+
+onActivated(() => {
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      _syncViewportMetrics()
+      _restoreScrollTop()
+    })
+  })
+})
+
+onDeactivated(() => {
+  emit('updateScrollTop', scrollTop.value)
 })
 
 onUnmounted(() => {
@@ -145,8 +197,11 @@ function scrollToIndex(index: number): void {
   emit('needRange', preloadStart, preloadEnd)
   containerRef.value.scrollTo({
     top: targetTop,
-    behavior: 'instant'
+    behavior: 'auto'
   })
+
+  scrollTop.value = targetTop
+  emit('updateScrollTop', targetTop)
 }
 
 defineExpose({

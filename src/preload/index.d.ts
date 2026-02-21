@@ -33,6 +33,7 @@ interface PocoPicApi {
   clearErrors: () => Promise<void>
   minimizeWindow: () => Promise<void>
   toggleMaximizeWindow: () => Promise<void>
+  toggleDevTools: () => Promise<void>
   closeWindow: () => Promise<void>
   isWindowMaximized: () => Promise<boolean>
   getStorageStats: () => Promise<StorageStats>

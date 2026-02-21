@@ -68,6 +68,8 @@ watch(
       :keyword="store.keyword"
       :favorites-only="store.favoritesOnly"
       :grid-size="gridSize"
+      :start-date-ms="startDateMs"
+      :end-date-ms="endDateMs"
       @update-keyword="store.setKeyword"
       @update-date-range="onDateRangePatch"
       @update-favorites-only="store.setFavoritesOnly"
@@ -93,7 +95,9 @@ watch(
           :get-item="store.getMediaByIndex"
           :get-thumbnail-url="store.toThumbnailUrl"
           :size-level="gridSize"
+          :initial-scroll-top="store.albumScrollTop"
           @need-range="(start, end) => handleAction(() => store.ensureRangeLoaded(start, end))"
+          @update-scroll-top="store.setAlbumScrollTop"
           @open-media="(filePath) => handleAction(() => store.openMedia(filePath))"
           @toggle-favorite="
             (id, isFavorite) => handleAction(() => store.setFavorite(id, isFavorite))

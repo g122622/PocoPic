@@ -33,15 +33,16 @@ protocol.registerSchemesAsPrivileged([
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    height: 900,
     minWidth: 880,
     minHeight: 620,
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
     autoHideMenuBar: true,
-    backgroundColor: '#f8f4ff',
+    // backgroundColor: '#550000',
+    resizable: true,
     icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

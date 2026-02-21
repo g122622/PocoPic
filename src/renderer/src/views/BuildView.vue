@@ -19,13 +19,13 @@ async function handleAction(action: () => Promise<void>): Promise<void> {
 
 <template>
   <div class="flex h-full flex-col gap-4">
-    <header class="cute-panel px-6 py-4 flex items-center gap-4">
-      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-200 to-violet-300 text-white shadow-md shadow-blue-200/50">
-        <UIcon name="i-lucide-hammer" class="h-6 w-6" />
+    <header class="cute-panel px-4 py-3 flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-200 to-violet-300 text-white shadow-md shadow-blue-200/50">
+        <UIcon name="i-lucide-hammer" class="h-5 w-5" />
       </div>
       <div>
-        <h1 class="text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">构建任务</h1>
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">管理媒体索引构建进度，查看并清理构建错误。</p>
+        <h1 class="text-xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">构建任务</h1>
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">管理媒体索引构建进度，查看并清理构建错误。</p>
       </div>
     </header>
 
