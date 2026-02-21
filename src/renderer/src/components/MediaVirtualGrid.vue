@@ -101,6 +101,28 @@ onUnmounted(() => {
 function getIndex(rowIndex: number, colIndex: number): number {
   return rowIndex * columnCount.value + colIndex
 }
+
+function scrollToIndex(index: number): void {
+  if (!containerRef.value || props.total <= 0) {
+    return
+  }
+
+  const safeIndex = Math.max(0, Math.min(index, props.total - 1))
+  const targetRow = Math.floor(safeIndex / columnCount.value)
+  const targetTop = targetRow * rowHeight
+  const preloadStart = Math.max(0, safeIndex - columnCount.value * overscan * 2)
+  const preloadEnd = Math.min(props.total, safeIndex + columnCount.value * (overscan * 2 + 1))
+
+  emit('needRange', preloadStart, preloadEnd)
+  containerRef.value.scrollTo({
+    top: targetTop,
+    behavior: 'smooth'
+  })
+}
+
+defineExpose({
+  scrollToIndex
+})
 </script>
 
 <template>

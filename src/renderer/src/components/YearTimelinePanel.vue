@@ -1,31 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { TimelineItem } from '@nuxt/ui'
-import type { YearBucket } from '@shared/types'
+import { ref } from 'vue'
+import type { YearTimelineBucket } from '@shared/types'
 
 const props = defineProps<{
-  buckets: YearBucket[]
+  buckets: YearTimelineBucket[]
 }>()
 
 const emit = defineEmits<{
   selectYear: [year: number]
+  selectMonth: [payload: { year: number; month: number }]
 }>()
 
-const timelineItems = computed<TimelineItem[]>(() => {
-  return props.buckets.map((bucket) => ({
-    date: `${bucket.count} 项`,
-    title: `${bucket.year} 年`,
-    description: '点击按年份筛选',
-    icon: 'i-lucide-calendar-days',
-    value: bucket.year
-  }))
-})
+const expandedYears = ref(new Set<number>())
 
-function onSelect(_event: Event, item: TimelineItem): void {
-  const year = Number(item.value)
-  if (Number.isFinite(year)) {
-    emit('selectYear', year)
+function toggleYearExpand(year: number): void {
+  if (expandedYears.value.has(year)) {
+    expandedYears.value.delete(year)
+    return
   }
+
+  expandedYears.value.add(year)
+}
+
+function isExpanded(year: number): boolean {
+  return expandedYears.value.has(year)
 }
 </script>
 
@@ -39,22 +37,55 @@ function onSelect(_event: Event, item: TimelineItem): void {
     </div>
 
     <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-      <UTimeline
-        :items="timelineItems"
-        color="primary"
-        size="md"
-        class="w-full"
-        :ui="{
-          item: 'cursor-pointer transition-all duration-300 hover:translate-x-1',
-          icon: 'text-primary-400 dark:text-primary-300',
-          title: 'text-sm font-bold text-slate-700 dark:text-slate-200',
-          description: 'text-xs text-slate-400 dark:text-slate-500',
-          date: 'text-xs font-bold text-primary-500 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-1 rounded-lg'
-        }"
-        @select="onSelect"
-      />
+      <div class="space-y-3">
+        <div
+          v-for="bucket in props.buckets"
+          :key="bucket.year"
+          class="rounded-2xl border border-slate-200/70 bg-white/70 p-3 transition-colors dark:border-slate-700/70 dark:bg-slate-900/30"
+        >
+          <div class="flex items-center gap-2">
+            <UButton
+              color="primary"
+              variant="ghost"
+              class="flex-1 justify-start px-2"
+              :label="`${bucket.year} 年`"
+              icon="i-lucide-calendar-days"
+              @click="emit('selectYear', bucket.year)"
+            />
 
-      <div v-if="timelineItems.length === 0" class="flex flex-col items-center justify-center h-full text-center">
+            <span class="rounded-lg bg-primary-50 px-2 py-1 text-xs font-bold text-primary-500 dark:bg-primary-900/30 dark:text-primary-300">
+              {{ bucket.count }} 项
+            </span>
+
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              :icon="isExpanded(bucket.year) ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+              :aria-label="isExpanded(bucket.year) ? `收起 ${bucket.year} 年月份` : `展开 ${bucket.year} 年月份`"
+              @click="toggleYearExpand(bucket.year)"
+            />
+          </div>
+
+          <div v-if="isExpanded(bucket.year)" class="mt-3 pl-2">
+            <div class="space-y-2 border-l border-dashed border-slate-300/80 pl-3 dark:border-slate-600/80">
+              <UButton
+                v-for="monthBucket in bucket.months"
+                :key="`${bucket.year}-${monthBucket.month}`"
+                color="neutral"
+                variant="ghost"
+                class="w-full justify-between text-sm"
+                @click="emit('selectMonth', { year: bucket.year, month: monthBucket.month })"
+              >
+                <span class="font-medium text-slate-700 dark:text-slate-200">{{ monthBucket.month }} 月</span>
+                <span class="text-xs text-slate-400 dark:text-slate-500">{{ monthBucket.count }} 项</span>
+              </UButton>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="props.buckets.length === 0" class="flex flex-col items-center justify-center h-full text-center">
         <div class="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 mb-3">
           <UIcon name="i-lucide-calendar-x" class="h-8 w-8" />
         </div>

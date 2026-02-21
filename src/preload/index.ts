@@ -7,8 +7,9 @@ import type {
   MediaFilterQuery,
   MediaQuery,
   MediaQueryResult,
+  MediaScrollTargetQuery,
   StorageStats,
-  YearBucket
+  YearTimelineBucket
 } from '../shared/types'
 
 // Custom APIs for renderer
@@ -32,8 +33,10 @@ const api = {
   getBuildStatus: (): Promise<BuildStatus> => electronAPI.ipcRenderer.invoke('build:status'),
 
   queryMedia: (query: MediaQuery): Promise<MediaQueryResult> => electronAPI.ipcRenderer.invoke('media:query', query),
-  queryYearBuckets: (query: MediaFilterQuery): Promise<YearBucket[]> =>
-    electronAPI.ipcRenderer.invoke('media:year-buckets', query),
+  queryYearTimelineBuckets: (query: MediaFilterQuery): Promise<YearTimelineBucket[]> =>
+    electronAPI.ipcRenderer.invoke('media:year-timeline-buckets', query),
+  queryScrollOffsetBeforeTime: (query: MediaScrollTargetQuery): Promise<number> =>
+    electronAPI.ipcRenderer.invoke('media:scroll-offset-before-time', query),
   setFavorite: (mediaId: number, isFavorite: boolean): Promise<void> =>
     electronAPI.ipcRenderer.invoke('media:favorite', mediaId, isFavorite),
 

@@ -1,6 +1,13 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { AppSettings, BuildErrorItem, BuildStatus, MediaItem, StorageStats, YearBucket } from '@shared/types'
+import type {
+  AppSettings,
+  BuildErrorItem,
+  BuildStatus,
+  MediaItem,
+  StorageStats,
+  YearTimelineBucket
+} from '@shared/types'
 
 type SettingsPatch = Partial<AppSettings>
 
@@ -28,7 +35,8 @@ export const useGalleryStore = defineStore('gallery', () => {
   const endTime = ref<number | null>(null)
   const favoritesOnly = ref(false)
   const total = ref(0)
-  const yearBuckets = ref<YearBucket[]>([])
+  const yearBuckets = ref<YearTimelineBucket[]>([])
+  const scrollTargetIndex = ref<number | null>(null)
 
   const cache = ref(new Map<number, MediaItem>())
   const loadingPages = ref(new Set<number>())
@@ -54,7 +62,9 @@ export const useGalleryStore = defineStore('gallery', () => {
       return true
     }
     return (
-      settings.value.indexDbPath.length === 0 || settings.value.thumbnailDir.length === 0 || settings.value.tmpDir.length === 0
+      settings.value.indexDbPath.length === 0 ||
+      settings.value.thumbnailDir.length === 0 ||
+      settings.value.tmpDir.length === 0
     )
   })
 
@@ -195,12 +205,27 @@ export const useGalleryStore = defineStore('gallery', () => {
   }
 
   async function refreshYearBuckets(): Promise<void> {
-    yearBuckets.value = await window.api.queryYearBuckets({
+    yearBuckets.value = await window.api.queryYearTimelineBuckets({
       keyword: keyword.value,
       startTime: startTime.value,
       endTime: endTime.value,
       favoritesOnly: favoritesOnly.value
     })
+  }
+
+  async function _jumpToTime(targetTime: number): Promise<void> {
+    const index = await window.api.queryScrollOffsetBeforeTime({
+      keyword: keyword.value,
+      startTime: startTime.value,
+      endTime: endTime.value,
+      favoritesOnly: favoritesOnly.value,
+      targetTime
+    })
+    if (total.value <= 0) {
+      scrollTargetIndex.value = null
+      return
+    }
+    scrollTargetIndex.value = Math.max(0, Math.min(index, total.value - 1))
   }
 
   async function ensureRangeLoaded(startIndex: number, endIndex: number): Promise<void> {
@@ -271,10 +296,19 @@ export const useGalleryStore = defineStore('gallery', () => {
   }
 
   async function jumpToYear(year: number): Promise<void> {
-    const start = new Date(year, 0, 1, 0, 0, 0, 0).getTime()
     const end = new Date(year, 11, 31, 23, 59, 59, 999).getTime()
-    setDateRange(start, end)
-    await applyFilters()
+    await _jumpToTime(end)
+  }
+
+  async function jumpToMonth(year: number, month: number): Promise<void> {
+    const end = new Date(year, month, 0, 23, 59, 59, 999).getTime()
+    await _jumpToTime(end)
+  }
+
+  function consumeScrollTargetIndex(): number | null {
+    const index = scrollTargetIndex.value
+    scrollTargetIndex.value = null
+    return index
   }
 
   async function setColorMode(mode: 'system' | 'light' | 'dark'): Promise<void> {
@@ -319,6 +353,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     favoritesOnly,
     total,
     yearBuckets,
+    scrollTargetIndex,
     hasEssentialSettings,
     needFirstRunSetup,
     progressPercent,
@@ -350,6 +385,8 @@ export const useGalleryStore = defineStore('gallery', () => {
     toThumbnailUrl,
     refreshMedia,
     refreshYearBuckets,
-    jumpToYear
+    jumpToYear,
+    jumpToMonth,
+    consumeScrollTargetIndex
   }
 })

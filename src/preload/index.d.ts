@@ -6,8 +6,9 @@ import type {
   MediaFilterQuery,
   MediaQuery,
   MediaQueryResult,
+  MediaScrollTargetQuery,
   StorageStats,
-  YearBucket
+  YearTimelineBucket
 } from '../shared/types'
 
 interface PocoPicApi {
@@ -25,7 +26,8 @@ interface PocoPicApi {
   cancelBuild: () => Promise<void>
   getBuildStatus: () => Promise<BuildStatus>
   queryMedia: (query: MediaQuery) => Promise<MediaQueryResult>
-  queryYearBuckets: (query: MediaFilterQuery) => Promise<YearBucket[]>
+  queryYearTimelineBuckets: (query: MediaFilterQuery) => Promise<YearTimelineBucket[]>
+  queryScrollOffsetBeforeTime: (query: MediaScrollTargetQuery) => Promise<number>
   setFavorite: (mediaId: number, isFavorite: boolean) => Promise<void>
   listErrors: (limit: number) => Promise<BuildErrorItem[]>
   clearErrors: () => Promise<void>

@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import SearchToolbar from '@renderer/components/SearchToolbar.vue'
 import MediaVirtualGrid from '@renderer/components/MediaVirtualGrid.vue'
 import YearTimelinePanel from '@renderer/components/YearTimelinePanel.vue'
 import { useGalleryStore } from '@renderer/stores/useGalleryStore'
 
+interface MediaVirtualGridExposed {
+  scrollToIndex: (index: number) => void
+}
+
 const store = useGalleryStore()
 const uiError = ref('')
 const startDateMs = ref<number | null>(null)
 const endDateMs = ref<number | null>(null)
+const mediaGridRef = ref<MediaVirtualGridExposed | null>(null)
 
 async function handleAction(action: () => Promise<void>): Promise<void> {
   try {
@@ -30,6 +35,26 @@ function onDateRangePatch(start: number | null, end: number | null): void {
 
   store.setDateRange(startDateMs.value, endDateMs.value)
 }
+
+async function onSelectYear(year: number): Promise<void> {
+  await handleAction(() => store.jumpToYear(year))
+}
+
+async function onSelectMonth(payload: { year: number; month: number }): Promise<void> {
+  await handleAction(() => store.jumpToMonth(payload.year, payload.month))
+}
+
+watch(
+  () => store.scrollTargetIndex,
+  (index) => {
+    if (index === null) {
+      return
+    }
+
+    mediaGridRef.value?.scrollToIndex(index)
+    store.consumeScrollTargetIndex()
+  }
+)
 </script>
 
 <template>
@@ -56,6 +81,7 @@ function onDateRangePatch(start: number | null, end: number | null): void {
     <div class="grid min-h-0 flex-1 grid-cols-[1fr_280px] gap-4">
       <main class="min-h-0 relative">
         <MediaVirtualGrid
+          ref="mediaGridRef"
           :total="store.total"
           :get-item="store.getMediaByIndex"
           :get-thumbnail-url="store.toThumbnailUrl"
@@ -70,7 +96,8 @@ function onDateRangePatch(start: number | null, end: number | null): void {
       <aside class="min-h-0 pb-2">
         <YearTimelinePanel
           :buckets="store.yearBuckets"
-          @select-year="(year) => handleAction(() => store.jumpToYear(year))"
+          @select-year="onSelectYear"
+          @select-month="onSelectMonth"
         />
       </aside>
     </div>

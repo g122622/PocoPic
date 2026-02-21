@@ -72,9 +72,19 @@ export interface MediaFilterQuery {
   favoritesOnly: boolean
 }
 
-export interface YearBucket {
+export interface MonthBucket {
+  month: number
+  count: number
+}
+
+export interface YearTimelineBucket {
   year: number
   count: number
+  months: MonthBucket[]
+}
+
+export interface MediaScrollTargetQuery extends MediaFilterQuery {
+  targetTime: number
 }
 
 export interface MediaQueryResult {

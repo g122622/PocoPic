@@ -1,7 +1,15 @@
 import Database from 'better-sqlite3'
 import { dirname } from 'node:path'
 import { promises as fs } from 'node:fs'
-import type { BuildErrorItem, MediaFilterQuery, MediaItem, MediaQuery, MediaQueryResult, YearBucket } from '../../shared/types'
+import type {
+  BuildErrorItem,
+  MediaFilterQuery,
+  MediaItem,
+  MediaQuery,
+  MediaQueryResult,
+  MediaScrollTargetQuery,
+  YearTimelineBucket
+} from '../../shared/types'
 
 interface MediaRow {
   id: number
@@ -203,7 +211,7 @@ export class DatabaseService {
     }
   }
 
-  public queryYearBuckets(query: MediaFilterQuery): YearBucket[] {
+  public queryYearTimelineBuckets(query: MediaFilterQuery): YearTimelineBucket[] {
     const db = this._requireDb()
     const { whereClause, params } = this._buildFilterClause(query)
 
@@ -212,19 +220,58 @@ export class DatabaseService {
         `
       SELECT
         CAST(strftime('%Y', datetime(captured_at / 1000, 'unixepoch')) AS INTEGER) AS year,
+        CAST(strftime('%m', datetime(captured_at / 1000, 'unixepoch')) AS INTEGER) AS month,
         COUNT(1) AS count
       FROM media
       ${whereClause}
-      GROUP BY year
-      ORDER BY year DESC
+      GROUP BY year, month
+      ORDER BY year DESC, month DESC
     `
       )
-      .all(...params) as Array<{ year: number; count: number }>
+      .all(...params) as Array<{ year: number; month: number; count: number }>
 
-    return rows.map((row) => ({
-      year: row.year,
-      count: row.count
-    }))
+    const timelineMap = new Map<number, YearTimelineBucket>()
+    for (const row of rows) {
+      const existing = timelineMap.get(row.year)
+      if (existing) {
+        existing.count += row.count
+        existing.months.push({
+          month: row.month,
+          count: row.count
+        })
+        continue
+      }
+
+      timelineMap.set(row.year, {
+        year: row.year,
+        count: row.count,
+        months: [
+          {
+            month: row.month,
+            count: row.count
+          }
+        ]
+      })
+    }
+
+    return Array.from(timelineMap.values())
+  }
+
+  public queryOffsetBeforeTime(query: MediaScrollTargetQuery): number {
+    const db = this._requireDb()
+    const { targetTime, ...filterQuery } = query
+    const { whereClause, params } = this._buildFilterClause(filterQuery)
+    const withAnd = whereClause.length > 0 ? `${whereClause} AND` : 'WHERE'
+    const row = db
+      .prepare(
+        `
+      SELECT COUNT(1) AS total
+      FROM media
+      ${withAnd} captured_at > ?
+    `
+      )
+      .get(...params, targetTime) as { total: number }
+    return row.total
   }
 
   public toggleFavorite(mediaId: number, isFavorite: boolean): void {

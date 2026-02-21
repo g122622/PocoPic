@@ -8,8 +8,9 @@ import type {
   MediaFilterQuery,
   MediaQuery,
   MediaQueryResult,
+  MediaScrollTargetQuery,
   StorageStats,
-  YearBucket
+  YearTimelineBucket
 } from '../../shared/types'
 import { SettingsService } from '../services/SettingsService'
 import { DatabaseService } from '../services/DatabaseService'
@@ -139,8 +140,12 @@ export function registerIpc(params: RegisterIpcParams): void {
     return databaseService.queryMedia(query)
   })
 
-  ipcMain.handle('media:year-buckets', (_, query: MediaFilterQuery): YearBucket[] => {
-    return databaseService.queryYearBuckets(query)
+  ipcMain.handle('media:year-timeline-buckets', (_, query: MediaFilterQuery): YearTimelineBucket[] => {
+    return databaseService.queryYearTimelineBuckets(query)
+  })
+
+  ipcMain.handle('media:scroll-offset-before-time', (_, query: MediaScrollTargetQuery): number => {
+    return databaseService.queryOffsetBeforeTime(query)
   })
 
   ipcMain.handle('media:favorite', (_, mediaId: number, isFavorite: boolean) => {
