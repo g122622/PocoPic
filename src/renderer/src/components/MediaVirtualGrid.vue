@@ -116,7 +116,7 @@ function scrollToIndex(index: number): void {
   emit('needRange', preloadStart, preloadEnd)
   containerRef.value.scrollTo({
     top: targetTop,
-    behavior: 'smooth'
+    behavior: 'instant'
   })
 }
 
