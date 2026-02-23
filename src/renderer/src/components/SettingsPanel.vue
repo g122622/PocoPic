@@ -256,7 +256,7 @@ function parseUnit(value: string): FileSizeUnit | null {
           <UButton
             class="cute-button"
             size="md"
-            color="emerald"
+            color="primary"
             variant="soft"
             icon="i-lucide-folder-search"
             label="选择"
@@ -322,7 +322,7 @@ function parseUnit(value: string): FileSizeUnit | null {
           <UButton
             class="cute-button"
             size="md"
-            color="cyan"
+            color="primary"
             variant="soft"
             icon="i-lucide-folder-search"
             label="选择"
@@ -450,7 +450,7 @@ function parseUnit(value: string): FileSizeUnit | null {
           <div
             v-for="keyword in settings.excludeDirKeywords"
             :key="`dir-${keyword}`"
-            class="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+            class="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-[12px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
           >
             <span>{{ keyword }}</span>
             <UTooltip :delay-duration="0" :text="`删除目录关键字：${keyword}`">

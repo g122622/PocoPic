@@ -198,6 +198,7 @@ export class BuildService extends EventEmitter {
   private async _spawnWorkers(workerCount: number): Promise<void> {
     const count = Math.max(1, workerCount)
     const workerPath = join(__dirname, 'workers', 'MediaBuildWorker.js')
+    console.log(`Spawning ${count} worker(s) for media build, worker script path: ${workerPath}`)
 
     for (let index = 0; index < count; index += 1) {
       const worker = new Worker(workerPath)

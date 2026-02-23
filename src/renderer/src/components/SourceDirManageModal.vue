@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 
 const props = defineProps<{
   open: boolean
@@ -16,6 +16,13 @@ const emit = defineEmits<{
 
 const dragSourceIndex = ref<number | null>(null)
 const dragTargetIndex = ref<number | null>(null)
+const listRef = ref<HTMLElement | null>(null)
+
+const AUTO_SCROLL_EDGE_PX = 56
+const AUTO_SCROLL_MAX_STEP_PX = 18
+
+let autoScrollRafId: number | null = null
+let autoScrollSpeed = 0
 
 function onDragStart(index: number): void {
   dragSourceIndex.value = index
@@ -24,16 +31,24 @@ function onDragStart(index: number): void {
 function onDragOver(index: number, event: DragEvent): void {
   event.preventDefault()
   dragTargetIndex.value = index
+  _updateAutoScroll(event)
 }
 
 function onDrop(index: number, event: DragEvent): void {
   event.preventDefault()
+  _stopAutoScroll()
   _moveItem(index)
 }
 
 function onDragEnd(): void {
   dragSourceIndex.value = null
   dragTargetIndex.value = null
+  _stopAutoScroll()
+}
+
+function onListDragOver(event: DragEvent): void {
+  event.preventDefault()
+  _updateAutoScroll(event)
 }
 
 function _moveItem(targetIndex: number): void {
@@ -55,6 +70,70 @@ function _moveItem(targetIndex: number): void {
   emit('reorderSourceDirs', next)
   onDragEnd()
 }
+
+function _updateAutoScroll(event: DragEvent): void {
+  const list = listRef.value
+  if (!list) {
+    _stopAutoScroll()
+    return
+  }
+
+  const rect = list.getBoundingClientRect()
+  const pointerY = event.clientY
+
+  if (pointerY <= rect.top + AUTO_SCROLL_EDGE_PX) {
+    const distance = rect.top + AUTO_SCROLL_EDGE_PX - pointerY
+    const ratio = Math.min(1, Math.max(0, distance / AUTO_SCROLL_EDGE_PX))
+    _setAutoScrollSpeed(-Math.ceil(ratio * AUTO_SCROLL_MAX_STEP_PX))
+    return
+  }
+
+  if (pointerY >= rect.bottom - AUTO_SCROLL_EDGE_PX) {
+    const distance = pointerY - (rect.bottom - AUTO_SCROLL_EDGE_PX)
+    const ratio = Math.min(1, Math.max(0, distance / AUTO_SCROLL_EDGE_PX))
+    _setAutoScrollSpeed(Math.ceil(ratio * AUTO_SCROLL_MAX_STEP_PX))
+    return
+  }
+
+  _stopAutoScroll()
+}
+
+function _setAutoScrollSpeed(nextSpeed: number): void {
+  if (nextSpeed === 0) {
+    _stopAutoScroll()
+    return
+  }
+
+  autoScrollSpeed = nextSpeed
+  if (autoScrollRafId !== null) {
+    return
+  }
+
+  _runAutoScroll()
+}
+
+function _runAutoScroll(): void {
+  const list = listRef.value
+  if (!list || autoScrollSpeed === 0) {
+    _stopAutoScroll()
+    return
+  }
+
+  list.scrollTop += autoScrollSpeed
+  autoScrollRafId = requestAnimationFrame(_runAutoScroll)
+}
+
+function _stopAutoScroll(): void {
+  autoScrollSpeed = 0
+  if (autoScrollRafId !== null) {
+    cancelAnimationFrame(autoScrollRafId)
+    autoScrollRafId = null
+  }
+}
+
+onUnmounted(() => {
+  _stopAutoScroll()
+})
 </script>
 
 <template>
@@ -90,7 +169,12 @@ function _moveItem(targetIndex: number): void {
           暂无扫描目录，请先添加。
         </div>
 
-        <ul v-else class="max-h-96 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
+        <ul
+          v-else
+          ref="listRef"
+          class="max-h-96 space-y-2 overflow-y-auto pr-1 custom-scrollbar"
+          @dragover="onListDragOver"
+        >
           <li
             v-for="(dir, index) in props.sourceDirs"
             :key="`${dir}-${index}`"
@@ -149,12 +233,7 @@ function _moveItem(targetIndex: number): void {
 
     <template #footer>
       <span class="text-xs text-slate-500 dark:text-slate-400">提示：拖动后会自动保存排序。</span>
-      <UButton
-        color="neutral"
-        variant="ghost"
-        label="关闭"
-        @click="emit('update:open', false)"
-      />
+      <UButton color="error" variant="soft" label="关闭" @click="emit('update:open', false)" />
     </template>
   </UModal>
 </template>

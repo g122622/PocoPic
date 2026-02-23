@@ -8,7 +8,7 @@ import ffmpeg from 'fluent-ffmpeg'
 import ffmpegStatic from 'ffmpeg-static'
 import heicConvert from 'heic-convert'
 import type { BuildTask, BuildTaskResult } from '../../shared/types'
-import { resolveHeicConvertTempPath, resolveVideoFrameTempPath } from '../services/PathResolver'
+import { resolveVideoFrameTempPath } from '../services/PathResolver'
 
 if (!parentPort) {
   throw new Error('Worker 初始化失败，无法建立通信通道。')
@@ -54,7 +54,8 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
   const stat = await fs.stat(task.filePath)
   const extension = extname(task.filePath).toLowerCase()
   const mediaType = IMAGE_EXTENSIONS.has(extension) ? 'image' : 'video'
-  const exifInfo = await safeReadMetadata(task.filePath, task.ignoreLocationData)
+  const imageBuffer = mediaType === 'image' ? await fs.readFile(task.filePath) : null
+  const exifInfo = await safeReadMetadata(task.filePath, imageBuffer, task.ignoreLocationData)
   const capturedAt = resolveCaptureTime(exifInfo, stat.mtimeMs)
 
   const thumbnailKey = createHash('sha1').update(task.filePath).digest('hex')
@@ -65,7 +66,7 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
 
   if (mediaType === 'image') {
     try {
-      const imageResult = await buildImageThumbnail(task, extension)
+      const imageResult = await buildImageThumbnail(task, extension, imageBuffer)
       width = imageResult.width
       height = imageResult.height
       thumbnailBytes = imageResult.thumbnailBytes
@@ -76,18 +77,20 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
         thumbnailKey: null,
         thumbnailBytes: null,
         errorStage: 'thumbnail',
-        errorMessage: error instanceof Error ? error.message : `图片缩略图失败: ${basename(task.filePath)}`
+        errorMessage:
+          error instanceof Error ? error.message : `图片缩略图失败: ${basename(task.filePath)}`
       }
     }
   } else {
     const tempFramePath = resolveVideoFrameTempPath(task.tmpDir)
     try {
       await extractVideoFrame(task.filePath, tempFramePath)
-      const metadata = await sharp(tempFramePath, { failOn: 'none' }).metadata()
+      const frameBuffer = await fs.readFile(tempFramePath)
+      const metadata = await sharp(frameBuffer, { failOn: 'none' }).metadata()
       width = metadata.width ?? null
       height = metadata.height ?? null
 
-      thumbnailBytes = await sharp(tempFramePath, { failOn: 'none' })
+      thumbnailBytes = await sharp(frameBuffer, { failOn: 'none' })
         .resize(task.thumbnailSize, task.thumbnailSize, {
           fit: 'cover',
           position: 'centre'
@@ -101,7 +104,8 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
         thumbnailKey: null,
         thumbnailBytes: null,
         errorStage: 'thumbnail',
-        errorMessage: error instanceof Error ? error.message : `视频缩略图失败: ${basename(task.filePath)}`
+        errorMessage:
+          error instanceof Error ? error.message : `视频缩略图失败: ${basename(task.filePath)}`
       }
     } finally {
       await fs.rm(tempFramePath, { force: true })
@@ -126,8 +130,12 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
       capturedAt,
       mtimeMs: stat.mtimeMs,
       deviceModel: toStringOrNull((exifInfo as Record<string, unknown>)?.Model),
-      gpsLat: task.ignoreLocationData ? null : toNumberOrNull((exifInfo as Record<string, unknown>)?.latitude),
-      gpsLng: task.ignoreLocationData ? null : toNumberOrNull((exifInfo as Record<string, unknown>)?.longitude),
+      gpsLat: task.ignoreLocationData
+        ? null
+        : toNumberOrNull((exifInfo as Record<string, unknown>)?.latitude),
+      gpsLng: task.ignoreLocationData
+        ? null
+        : toNumberOrNull((exifInfo as Record<string, unknown>)?.longitude),
       thumbnailPath: thumbnailKey
     }
   }
@@ -135,11 +143,16 @@ async function processTask(task: BuildTask): Promise<BuildTaskResult> {
 
 async function buildImageThumbnail(
   task: BuildTask,
-  extension: string
+  extension: string,
+  imageBuffer: Buffer | null
 ): Promise<{ width: number | null; height: number | null; thumbnailBytes: Buffer }> {
+  if (!imageBuffer) {
+    throw new Error(`图片缩略图失败: ${basename(task.filePath)}；缺少图片二进制数据。`)
+  }
+
   try {
-    const metadata = await sharp(task.filePath, { failOn: 'none' }).metadata()
-    const thumbnailBytes = await sharp(task.filePath, { failOn: 'none' })
+    const metadata = await sharp(imageBuffer, { failOn: 'none' }).metadata()
+    const thumbnailBytes = await sharp(imageBuffer, { failOn: 'none' })
       .rotate()
       .resize(task.thumbnailSize, task.thumbnailSize, {
         fit: 'cover',
@@ -154,25 +167,20 @@ async function buildImageThumbnail(
       thumbnailBytes
     }
   } catch (sharpError) {
-    // console.log('HEIC 转换失败，尝试使用 sharp 处理原图失败，错误信息如下：')
-    // console.log(sharpError);
     if (!HEIC_EXTENSIONS.has(extension)) {
       throw new Error(resolveImageThumbnailSharpErrorMessage(task.filePath, sharpError))
     }
 
-    const tempImagePath = resolveHeicConvertTempPath(task.tmpDir)
-
     try {
-      const inputBuffer = await fs.readFile(task.filePath)
       const convertedBuffer = await heicConvert({
-        buffer: inputBuffer as unknown as ArrayBufferLike,
+        buffer: imageBuffer as unknown as ArrayBufferLike,
         format: 'JPEG',
         quality: normalizeHeicQuality(task.thumbnailQuality)
       })
-      await fs.writeFile(tempImagePath, Buffer.from(new Uint8Array(convertedBuffer)))
 
-      const metadata = await sharp(tempImagePath, { failOn: 'none' }).metadata()
-      const thumbnailBytes = await sharp(tempImagePath, { failOn: 'none' })
+      const convertedImageBuffer = Buffer.from(new Uint8Array(convertedBuffer))
+      const metadata = await sharp(convertedImageBuffer, { failOn: 'none' }).metadata()
+      const thumbnailBytes = await sharp(convertedImageBuffer, { failOn: 'none' })
         .rotate()
         .resize(task.thumbnailSize, task.thumbnailSize, {
           fit: 'cover',
@@ -187,11 +195,7 @@ async function buildImageThumbnail(
         thumbnailBytes
       }
     } catch (fallbackError) {
-      // console.log('HEIC 转换失败，尝试使用 heicConvert 处理原图失败，错误信息如下：')
-      // console.log(fallbackError);
       throw new Error(resolveImageThumbnailErrorMessage(task.filePath, sharpError, fallbackError))
-    } finally {
-      await fs.rm(tempImagePath, { force: true })
     }
   }
 }
@@ -214,16 +218,27 @@ function resolveImageThumbnailSharpErrorMessage(filePath: string, sharpError: un
   return `图片缩略图失败: ${basename(filePath)}；sharp=${sharpMessage}`
 }
 
-function resolveImageThumbnailErrorMessage(filePath: string, sharpError: unknown, fallbackError: unknown): string {
+function resolveImageThumbnailErrorMessage(
+  filePath: string,
+  sharpError: unknown,
+  fallbackError: unknown
+): string {
   const sharpMessage = sharpError instanceof Error ? sharpError.message : 'unknown sharp error'
-  const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'unknown heic-convert fallback error'
+  const fallbackMessage =
+    fallbackError instanceof Error ? fallbackError.message : 'unknown heic-convert fallback error'
 
   return `图片缩略图失败: ${basename(filePath)}；sharp=${sharpMessage}；heic-convert-fallback=${fallbackMessage}`
 }
 
-async function safeReadMetadata(filePath: string, ignoreLocationData: boolean): Promise<unknown> {
+async function safeReadMetadata(
+  filePath: string,
+  imageBuffer: Buffer | null,
+  ignoreLocationData: boolean
+): Promise<unknown> {
   try {
-    return await exifr.parse(filePath, {
+    const metadataSource = imageBuffer ?? filePath
+
+    return await exifr.parse(metadataSource, {
       tiff: true,
       exif: true,
       gps: !ignoreLocationData,
@@ -245,7 +260,9 @@ async function safeReadMetadata(filePath: string, ignoreLocationData: boolean): 
 
 function resolveCaptureTime(metadata: unknown, fallbackMtimeMs: number): number {
   const info =
-    metadata && typeof metadata === 'object' ? (metadata as Record<string, unknown>) : ({} as Record<string, unknown>)
+    metadata && typeof metadata === 'object'
+      ? (metadata as Record<string, unknown>)
+      : ({} as Record<string, unknown>)
 
   const orderedCandidates = [
     info.DateTimeOriginal,
