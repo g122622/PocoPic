@@ -154,6 +154,8 @@ async function buildImageThumbnail(
       thumbnailBytes
     }
   } catch (sharpError) {
+    // console.log('HEIC 转换失败，尝试使用 sharp 处理原图失败，错误信息如下：')
+    // console.log(sharpError);
     if (!HEIC_EXTENSIONS.has(extension)) {
       throw new Error(resolveImageThumbnailSharpErrorMessage(task.filePath, sharpError))
     }
@@ -162,12 +164,8 @@ async function buildImageThumbnail(
 
     try {
       const inputBuffer = await fs.readFile(task.filePath)
-      const arrayBuffer = inputBuffer.buffer.slice(
-        inputBuffer.byteOffset,
-        inputBuffer.byteOffset + inputBuffer.byteLength
-      )
       const convertedBuffer = await heicConvert({
-        buffer: arrayBuffer,
+        buffer: inputBuffer as unknown as ArrayBufferLike,
         format: 'JPEG',
         quality: normalizeHeicQuality(task.thumbnailQuality)
       })
@@ -189,6 +187,8 @@ async function buildImageThumbnail(
         thumbnailBytes
       }
     } catch (fallbackError) {
+      // console.log('HEIC 转换失败，尝试使用 heicConvert 处理原图失败，错误信息如下：')
+      // console.log(fallbackError);
       throw new Error(resolveImageThumbnailErrorMessage(task.filePath, sharpError, fallbackError))
     } finally {
       await fs.rm(tempImagePath, { force: true })

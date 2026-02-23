@@ -17,7 +17,26 @@ export interface AppSettings {
   thumbnailSize: number
   thumbnailQuality: number
   ignoreLocationData: boolean
+  showMediaCapturedAt: boolean
+  showMediaSize: boolean
   colorMode: 'system' | 'light' | 'dark'
+}
+
+export interface ProfileSummary {
+  profileId: string
+  name: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface ProfileState {
+  currentProfileId: string
+  profiles: ProfileSummary[]
+}
+
+export interface ProfileContext {
+  state: ProfileState
+  settings: AppSettings
 }
 
 export interface BuildStatus {

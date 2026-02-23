@@ -16,6 +16,9 @@ const props = defineProps<{
   total: number
   getItem: (index: number) => MediaItem | null
   getThumbnailUrl: (path: string) => string
+  showItemContextMenu: (filePath: string) => Promise<void>
+  showMetaCapturedAt: boolean
+  showMetaSize: boolean
   sizeLevel: 'sm' | 'md' | 'lg'
   initialScrollTop: number
 }>()
@@ -60,8 +63,28 @@ const sizePreset = computed(() => {
   }
 })
 
+const metaLineCount = computed(() => {
+  return (props.showMetaCapturedAt ? 1 : 0) + (props.showMetaSize ? 1 : 0)
+})
+
+const metaHeight = computed(() => {
+  if (metaLineCount.value <= 0) {
+    return 0
+  }
+
+  if (metaLineCount.value === 1) {
+    return 24
+  }
+
+  return sizePreset.value.metaHeight
+})
+
+const shouldShowMetaBlock = computed(() => {
+  return metaLineCount.value > 0
+})
+
 const rowHeight = computed(() => {
-  return sizePreset.value.cellSize + sizePreset.value.metaHeight + sizePreset.value.cardPadding * 2
+  return sizePreset.value.cellSize + metaHeight.value + sizePreset.value.cardPadding * 2
 })
 
 const columnCount = computed(() => {
@@ -183,6 +206,26 @@ function getIndex(rowIndex: number, colIndex: number): number {
   return rowIndex * columnCount.value + colIndex
 }
 
+function getMediaItem(rowIndex: number, colIndex: number): MediaItem | null {
+  return props.getItem(getIndex(rowIndex, colIndex))
+}
+
+function getMediaDimensions(item: MediaItem): string {
+  if (item.width === null || item.height === null) {
+    return '-'
+  }
+
+  return `${item.width} × ${item.height}`
+}
+
+async function onItemContextMenu(filePath: string): Promise<void> {
+  if (!filePath) {
+    return
+  }
+
+  await props.showItemContextMenu(filePath)
+}
+
 function scrollToIndex(index: number): void {
   if (!containerRef.value || props.total <= 0) {
     return
@@ -210,83 +253,144 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="containerRef" class="cute-panel h-full overflow-y-auto overflow-x-hidden p-6 custom-scrollbar"
-    @scroll="onScroll">
-    <div :style="{
-      height: `${spacerHeight}px`,
-      position: 'relative'
-    }" class="w-full">
-      <div v-for="rowIndex in virtualRows" :key="rowIndex" :style="{
-        transform: `translateY(${rowIndex * rowHeight}px)`,
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%'
-      }">
-        <div class="grid" :style="{
-          gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
-          gap: `${sizePreset.cellGap}px`
-        }">
+  <div
+    ref="containerRef"
+    class="cute-panel h-full overflow-y-auto overflow-x-hidden p-6 custom-scrollbar"
+    @scroll="onScroll"
+  >
+    <div
+      :style="{
+        height: `${spacerHeight}px`,
+        position: 'relative'
+      }"
+      class="w-full"
+    >
+      <div
+        v-for="rowIndex in virtualRows"
+        :key="rowIndex"
+        :style="{
+          transform: `translateY(${rowIndex * rowHeight}px)`,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%'
+        }"
+      >
+        <div
+          class="grid"
+          :style="{
+            gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+            gap: `${sizePreset.cellGap}px`
+          }"
+        >
           <template v-for="col in columnCount" :key="col">
             <UTooltip
-              :delay-duration="0"
-              :text="getItem(getIndex(rowIndex, col - 1))?.filePath || '文件路径不可用'"
+              :delay-duration="500"
+              :content="{ side: 'right', sideOffset: 8, collisionPadding: 8 }"
             >
-              <div class="cute-card group relative overflow-hidden" :style="{
-                minHeight: `${rowHeight - sizePreset.cellGap}px`,
-                padding: `${sizePreset.cardPadding}px`
-              }">
-              <template v-if="getItem(getIndex(rowIndex, col - 1))">
-                <button
-                  class="block w-full rounded-2xl text-left outline-none transition-all duration-200 focus:ring-2 focus:ring-primary-400/50"
-                  @dblclick="emit('openMedia', getItem(getIndex(rowIndex, col - 1))!.filePath)">
-                  <div class="relative overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                    <img
-                      class="w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105"
-                      :style="{ height: `${sizePreset.cellSize}px` }"
-                      :src="getThumbnailUrl(getItem(getIndex(rowIndex, col - 1))!.thumbnailPath)"
-                      :alt="getItem(getIndex(rowIndex, col - 1))!.fileName" loading="lazy" />
-                    <div
-                      class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    </div>
-                    <UTooltip :delay-duration="0" text="切换收藏状态">
-                      <UButton
-                        class="absolute right-2 top-2 opacity-0 transition-all duration-300 hover:scale-110 group-hover:opacity-100"
-                        size="sm" :color="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'amber' : 'white'"
-                        :variant="getItem(getIndex(rowIndex, col - 1))!.isFavorite ? 'solid' : 'soft'"
-                        icon="i-lucide-star" :ui="{ rounded: 'rounded-xl' }" @click.stop="
-                          emit(
-                            'toggleFavorite',
-                            getItem(getIndex(rowIndex, col - 1))!.id,
-                            getItem(getIndex(rowIndex, col - 1))!.isFavorite === 0
-                          )
-                          " />
-                    </UTooltip>
+              <template #content>
+                <template v-if="getMediaItem(rowIndex, col - 1)">
+                  <div
+                    class="max-w-110 space-y-1.5 text-xs text-slate-700 dark:text-slate-200 p-3 rounded-xl"
+                    style="background-color: var(--ui-bg)"
+                  >
+                    <p class="break-all leading-relaxed">
+                      {{ getMediaItem(rowIndex, col - 1)!.filePath }}
+                    </p>
+                    <div class="h-px bg-slate-200/70 dark:bg-slate-700/70" />
+                    <p>日期：{{ formatTime(getMediaItem(rowIndex, col - 1)!.capturedAt) }}</p>
+                    <p>大小：{{ prettyBytes(getMediaItem(rowIndex, col - 1)!.sizeBytes, 2) }}</p>
+                    <p>宽高：{{ getMediaDimensions(getMediaItem(rowIndex, col - 1)!) }}</p>
+                    <p>修改时间：{{ formatTime(getMediaItem(rowIndex, col - 1)!.mtimeMs) }}</p>
                   </div>
+                </template>
+                <template v-else>
+                  <p class="text-xs">文件路径不可用</p>
+                </template>
+              </template>
 
-                  <div class="mt-2 px-1">
-                    <div class="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500">
-                      <UIcon name="i-lucide-clock" class="h-3 w-3" />
-                      <span style="font-size: 10px">
-                        {{ formatTime(getItem(getIndex(rowIndex, col - 1))!.capturedAt) }}
-                      </span>
+              <div
+                class="cute-card group relative overflow-hidden"
+                :style="{
+                  minHeight: `${rowHeight - sizePreset.cellGap}px`,
+                  padding: `${sizePreset.cardPadding}px`
+                }"
+              >
+                <template v-if="getMediaItem(rowIndex, col - 1)">
+                  <button
+                    class="block w-full rounded-2xl text-left outline-none transition-all duration-200 focus:ring-2 focus:ring-primary-400/50"
+                    @dblclick="emit('openMedia', getMediaItem(rowIndex, col - 1)!.filePath)"
+                    @contextmenu.prevent="
+                      onItemContextMenu(getMediaItem(rowIndex, col - 1)!.filePath)
+                    "
+                  >
+                    <div class="relative overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                      <img
+                        class="w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105"
+                        :style="{ height: `${sizePreset.cellSize}px` }"
+                        :src="getThumbnailUrl(getMediaItem(rowIndex, col - 1)!.thumbnailPath)"
+                        :alt="getMediaItem(rowIndex, col - 1)!.fileName"
+                        loading="lazy"
+                      />
+                      <div
+                        class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                      ></div>
+                      <div
+                        v-if="getMediaItem(rowIndex, col - 1)!.mediaType === 'video'"
+                        class="absolute bottom-2 right-2 rounded-lg bg-black/60 px-1.5 py-1 text-white backdrop-blur-sm"
+                      >
+                        <UIcon name="i-lucide-video" class="h-3.5 w-3.5" />
+                      </div>
+                      <UTooltip :delay-duration="0" text="切换收藏状态">
+                        <UButton
+                          class="absolute right-2 top-2 opacity-0 transition-all duration-300 hover:scale-110 group-hover:opacity-100"
+                          size="sm"
+                          :color="getMediaItem(rowIndex, col - 1)!.isFavorite ? 'amber' : 'white'"
+                          :variant="getMediaItem(rowIndex, col - 1)!.isFavorite ? 'solid' : 'soft'"
+                          icon="i-lucide-star"
+                          :ui="{ rounded: 'rounded-xl' }"
+                          @click.stop="
+                            emit(
+                              'toggleFavorite',
+                              getMediaItem(rowIndex, col - 1)!.id,
+                              getMediaItem(rowIndex, col - 1)!.isFavorite === 0
+                            )
+                          "
+                        />
+                      </UTooltip>
                     </div>
-                    <div class="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500">
-                      <UIcon name="i-lucide-file" class="h-3 w-3" />
-                      <span style="font-size: 10px">
-                        {{ prettyBytes(getItem(getIndex(rowIndex, col - 1))!.sizeBytes, 2) }}
-                      </span>
+
+                    <div v-if="shouldShowMetaBlock" class="mt-2 px-1">
+                      <div
+                        v-if="showMetaCapturedAt"
+                        class="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500"
+                      >
+                        <UIcon name="i-lucide-clock" class="h-3 w-3" />
+                        <span style="font-size: 10px">
+                          {{ formatTime(getMediaItem(rowIndex, col - 1)!.capturedAt) }}
+                        </span>
+                      </div>
+                      <div
+                        v-if="showMetaSize"
+                        class="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500"
+                      >
+                        <UIcon name="i-lucide-file" class="h-3 w-3" />
+                        <span style="font-size: 10px">
+                          {{ prettyBytes(getMediaItem(rowIndex, col - 1)!.sizeBytes, 2) }}
+                        </span>
+                      </div>
                     </div>
+                  </button>
+                </template>
+                <template v-else>
+                  <USkeleton
+                    class="w-full rounded-2xl bg-slate-200/50 dark:bg-slate-700/50"
+                    :style="{ height: `${sizePreset.cellSize}px` }"
+                  />
+                  <div v-if="shouldShowMetaBlock" class="mt-2 space-y-2 px-1">
+                    <USkeleton class="h-3 w-full rounded-lg bg-slate-200/50 dark:bg-slate-700/50" />
                   </div>
-                </button>
-              </template>
-              <template v-else>
-                <USkeleton class="w-full rounded-2xl bg-slate-200/50 dark:bg-slate-700/50"
-                  :style="{ height: `${sizePreset.cellSize}px` }" />
-                <div class="mt-2 space-y-2 px-1">
-                  <USkeleton class="h-3 w-full rounded-lg bg-slate-200/50 dark:bg-slate-700/50" />
-                </div>
-              </template>
+                </template>
               </div>
             </UTooltip>
           </template>

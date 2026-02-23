@@ -5,6 +5,7 @@ import type {
   BuildErrorItem,
   BuildStatus,
   MediaItem,
+  ProfileSummary,
   StorageStats,
   YearTimelineBucket
 } from '@shared/types'
@@ -14,6 +15,8 @@ type SettingsPatch = Partial<AppSettings>
 const PAGE_SIZE = 200
 
 export const useGalleryStore = defineStore('gallery', () => {
+  const profiles = ref<ProfileSummary[]>([])
+  const activeProfileId = ref('')
   const settings = ref<AppSettings | null>(null)
   const storageStats = ref<StorageStats>({ indexDbBytes: 0, thumbnailBytes: 0 })
   const buildStatus = ref<BuildStatus>({
@@ -77,6 +80,10 @@ export const useGalleryStore = defineStore('gallery', () => {
   })
 
   async function initialize(): Promise<void> {
+    const profileState = await window.api.getProfileState()
+    profiles.value = profileState.profiles
+    activeProfileId.value = profileState.currentProfileId
+
     settings.value = await window.api.getSettings()
     buildStatus.value = await window.api.getBuildStatus()
     errors.value = await window.api.listErrors(500)
@@ -101,6 +108,51 @@ export const useGalleryStore = defineStore('gallery', () => {
     })
 
     await Promise.all([refreshMedia(), refreshYearBuckets()])
+  }
+
+  function getActiveProfile(): ProfileSummary | null {
+    for (const profile of profiles.value) {
+      if (profile.profileId === activeProfileId.value) {
+        return profile
+      }
+    }
+
+    return null
+  }
+
+  async function switchProfile(profileId: string): Promise<void> {
+    const context = await window.api.switchProfile(profileId)
+    profiles.value = context.state.profiles
+    activeProfileId.value = context.state.currentProfileId
+    settings.value = context.settings
+    applyColorMode(context.settings.colorMode)
+
+    buildStatus.value = await window.api.getBuildStatus()
+    errors.value = await window.api.listErrors(500)
+    await Promise.all([refreshMedia(), refreshYearBuckets(), refreshStorageStats()])
+  }
+
+  async function createProfile(name: string): Promise<void> {
+    const state = await window.api.createProfile(name)
+    profiles.value = state.profiles
+    activeProfileId.value = state.currentProfileId
+
+    const latest = state.profiles[state.profiles.length - 1]
+    if (!latest) {
+      throw new Error('创建 Profile 失败，请重试。')
+    }
+
+    await switchProfile(latest.profileId)
+  }
+
+  async function renameActiveProfile(name: string): Promise<void> {
+    if (!activeProfileId.value) {
+      throw new Error('当前没有可重命名的 Profile。')
+    }
+
+    const state = await window.api.renameProfile(activeProfileId.value, name)
+    profiles.value = state.profiles
+    activeProfileId.value = state.currentProfileId
   }
 
   async function refreshStorageStats(): Promise<void> {
@@ -279,6 +331,10 @@ export const useGalleryStore = defineStore('gallery', () => {
     await window.api.openMedia(path)
   }
 
+  async function showMediaItemContextMenu(path: string): Promise<void> {
+    await window.api.showMediaItemContextMenu(path)
+  }
+
   function setKeyword(value: string): void {
     keyword.value = value
   }
@@ -348,6 +404,8 @@ export const useGalleryStore = defineStore('gallery', () => {
   })
 
   return {
+    profiles,
+    activeProfileId,
     settings,
     storageStats,
     buildStatus,
@@ -364,6 +422,10 @@ export const useGalleryStore = defineStore('gallery', () => {
     needFirstRunSetup,
     progressPercent,
     initialize,
+    getActiveProfile,
+    switchProfile,
+    createProfile,
+    renameActiveProfile,
     refreshStorageStats,
     updateSettings,
     chooseIndexDbPath,
@@ -383,6 +445,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     getMediaByIndex,
     setFavorite,
     openMedia,
+    showMediaItemContextMenu,
     setKeyword,
     setDateRange,
     setFavoritesOnly,

@@ -3,24 +3,83 @@ import { cpus } from 'node:os'
 import { dirname, join } from 'node:path'
 import { promises as fs } from 'node:fs'
 import type { AppSettings, FileSizeUnit } from '../../shared/types'
+import { ProfileService } from './ProfileService'
+import {
+  resolveProfileIndexDbPath,
+  resolveProfileSettingsPath,
+  resolveProfileThumbnailDir,
+  resolveProfileTmpDir
+} from './PathResolver'
 
 interface PartialSettings extends Partial<AppSettings> {}
 
 export class SettingsService {
-  private readonly _settingsPath: string
+  private readonly _profileService: ProfileService
+  private readonly _legacySettingsPath: string
 
-  public constructor() {
-    this._settingsPath = join(app.getPath('userData'), 'settings.json')
+  public constructor(profileService: ProfileService) {
+    this._profileService = profileService
+    this._legacySettingsPath = join(app.getPath('userData'), 'settings.json')
   }
 
   public async getSettings(): Promise<AppSettings> {
-    const raw = await this._readPartial()
+    const profileId = this._profileService.getCurrentProfileIdSync()
+    const profileDir = this._profileService.getProfileDir(profileId)
+    const settingsPath = resolveProfileSettingsPath(profileDir)
+    const raw = await this._readPartial(settingsPath)
+    return this._buildSettings(raw, profileDir)
+  }
+
+  public async updateSettings(next: PartialSettings): Promise<AppSettings> {
+    const profileId = this._profileService.getCurrentProfileIdSync()
+    const settingsPath = resolveProfileSettingsPath(this._profileService.getProfileDir(profileId))
+    const current = await this.getSettings()
+    const merged: AppSettings = {
+      ...current,
+      ...next,
+      sourceDirs: next.sourceDirs ?? current.sourceDirs
+    }
+
+    await fs.mkdir(dirname(settingsPath), { recursive: true })
+    await fs.writeFile(settingsPath, JSON.stringify(merged, null, 2), 'utf-8')
+
+    return merged
+  }
+
+  public async initializeProfileSettingsIfNeeded(): Promise<void> {
+    const profileId = this._profileService.getCurrentProfileIdSync()
+    const settingsPath = resolveProfileSettingsPath(this._profileService.getProfileDir(profileId))
+
+    try {
+      await fs.access(settingsPath)
+      return
+    } catch {
+      // do nothing
+    }
+
+    const legacy = await this._readPartial(this._legacySettingsPath)
+    if (Object.keys(legacy).length === 0) {
+      const defaults = await this.getSettings()
+      await fs.mkdir(dirname(settingsPath), { recursive: true })
+      await fs.writeFile(settingsPath, JSON.stringify(defaults, null, 2), 'utf-8')
+      return
+    }
+
+    const settings = this._buildSettings(legacy, this._profileService.getProfileDir(profileId))
+    await fs.mkdir(dirname(settingsPath), { recursive: true })
+    await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf-8')
+  }
+
+  private _buildSettings(raw: PartialSettings, profileDir: string): AppSettings {
     const workerCountDefault = Math.max(1, Math.floor(cpus().length / 2))
+    const defaultIndexDbPath = resolveProfileIndexDbPath(profileDir)
+    const defaultThumbnailDir = resolveProfileThumbnailDir(profileDir)
+    const defaultTmpDir = resolveProfileTmpDir(profileDir)
 
     return {
-      indexDbPath: raw.indexDbPath ?? '',
-      thumbnailDir: raw.thumbnailDir ?? '',
-      tmpDir: raw.tmpDir ?? '',
+      indexDbPath: this._normalizePath(raw.indexDbPath, defaultIndexDbPath),
+      thumbnailDir: this._normalizePath(raw.thumbnailDir, defaultThumbnailDir),
+      tmpDir: this._normalizePath(raw.tmpDir, defaultTmpDir),
       sourceDirs: raw.sourceDirs ?? [],
       excludeDirKeywords: this._normalizeKeywords(raw.excludeDirKeywords),
       excludeFileKeywords: this._normalizeKeywords(raw.excludeFileKeywords),
@@ -32,32 +91,33 @@ export class SettingsService {
       thumbnailSize: raw.thumbnailSize ?? 256,
       thumbnailQuality: raw.thumbnailQuality ?? 80,
       ignoreLocationData: raw.ignoreLocationData ?? true,
+      showMediaCapturedAt: raw.showMediaCapturedAt ?? true,
+      showMediaSize: raw.showMediaSize ?? true,
       colorMode: raw.colorMode ?? 'system'
     }
   }
 
-  public async updateSettings(next: PartialSettings): Promise<AppSettings> {
-    const current = await this.getSettings()
-    const merged: AppSettings = {
-      ...current,
-      ...next,
-      sourceDirs: next.sourceDirs ?? current.sourceDirs
-    }
-
-    await fs.mkdir(dirname(this._settingsPath), { recursive: true })
-    await fs.writeFile(this._settingsPath, JSON.stringify(merged, null, 2), 'utf-8')
-
-    return merged
-  }
-
-  private async _readPartial(): Promise<PartialSettings> {
+  private async _readPartial(settingsPath: string): Promise<PartialSettings> {
     try {
-      const content = await fs.readFile(this._settingsPath, 'utf-8')
+      const content = await fs.readFile(settingsPath, 'utf-8')
       const parsed = JSON.parse(content) as PartialSettings
       return parsed
     } catch {
       return {}
     }
+  }
+
+  private _normalizePath(value: unknown, fallback: string): string {
+    if (typeof value !== 'string') {
+      return fallback
+    }
+
+    const normalized = value.trim()
+    if (!normalized) {
+      return fallback
+    }
+
+    return normalized
   }
 
   private _normalizeKeywords(value: unknown): string[] {

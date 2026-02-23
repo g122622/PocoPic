@@ -4,6 +4,8 @@ import type {
   BuildErrorItem,
   BuildStatus,
   MediaFilterQuery,
+  ProfileContext,
+  ProfileState,
   MediaQuery,
   MediaQueryResult,
   MediaScrollTargetQuery,
@@ -14,12 +16,17 @@ import type {
 interface PocoPicApi {
   getSettings: () => Promise<AppSettings>
   updateSettings: (next: Partial<AppSettings>) => Promise<AppSettings>
+  getProfileState: () => Promise<ProfileState>
+  createProfile: (name: string) => Promise<ProfileState>
+  renameProfile: (profileId: string, name: string) => Promise<ProfileState>
+  switchProfile: (profileId: string) => Promise<ProfileContext>
   chooseIndexDbPath: () => Promise<string>
   chooseThumbnailDir: () => Promise<string>
   chooseSourceDir: () => Promise<string>
   chooseTmpDir: () => Promise<string>
   openPath: (fullPath: string) => Promise<void>
   openMedia: (mediaPath: string) => Promise<void>
+  showMediaItemContextMenu: (mediaPath: string) => Promise<void>
   startBuild: () => Promise<void>
   pauseBuild: () => Promise<void>
   resumeBuild: () => Promise<void>
@@ -36,6 +43,7 @@ interface PocoPicApi {
   toggleDevTools: () => Promise<void>
   closeWindow: () => Promise<void>
   isWindowMaximized: () => Promise<boolean>
+  reloadWindow: () => Promise<void>
   getStorageStats: () => Promise<StorageStats>
   clearIndexDb: () => Promise<void>
   clearThumbnails: () => Promise<void>

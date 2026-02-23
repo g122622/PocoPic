@@ -4,11 +4,13 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import { RouterView } from 'vue-router'
 import { useGalleryStore } from './stores/useGalleryStore'
 import appLogo from '@renderer/assets/logo.png'
+import ProfileManageModal from '@renderer/components/ProfileManageModal.vue'
 
 const store = useGalleryStore()
 const uiError = ref('')
-const isSidebarCollapsed = ref(false)
+const isSidebarCollapsed = ref(true)
 const isWindowMaximized = ref(false)
+const isProfileModalOpen = ref(false)
 
 const sidebarItems: NavigationMenuItem[] = [
   {
@@ -47,7 +49,16 @@ const displaySidebarItems = computed<NavigationMenuItem[]>(() => {
 })
 
 const layoutColumns = computed(() => {
-  return isSidebarCollapsed.value ? '84px 1fr' : '200px 1fr'
+  return isSidebarCollapsed.value ? '65px 1fr' : '200px 1fr'
+})
+
+const activeProfileName = computed(() => {
+  const active = store.getActiveProfile()
+  if (!active) {
+    return '未选择 Profile'
+  }
+
+  return active.name
 })
 
 function toggleSidebar(): void {
@@ -88,6 +99,10 @@ async function handleMinimizeWindow(): Promise<void> {
   await handleAction(() => window.api.minimizeWindow())
 }
 
+async function handleReloadWindow(): Promise<void> {
+  await handleAction(() => window.api.reloadWindow())
+}
+
 async function handleToggleMaximizeWindow(): Promise<void> {
   await handleAction(async () => {
     await window.api.toggleMaximizeWindow()
@@ -97,6 +112,30 @@ async function handleToggleMaximizeWindow(): Promise<void> {
 
 async function handleCloseWindow(): Promise<void> {
   await handleAction(() => window.api.closeWindow())
+}
+
+function openProfileModal(): void {
+  isProfileModalOpen.value = true
+}
+
+function handleProfileModalOpenChange(value: boolean): void {
+  isProfileModalOpen.value = value
+}
+
+async function handleProfileSwitch(profileId: string): Promise<void> {
+  if (!profileId || profileId === store.activeProfileId) {
+    return
+  }
+
+  await handleAction(() => store.switchProfile(profileId))
+}
+
+async function handleCreateProfile(name: string): Promise<void> {
+  await handleAction(() => store.createProfile(name))
+}
+
+async function handleRenameProfile(name: string): Promise<void> {
+  await handleAction(() => store.renameActiveProfile(name))
 }
 </script>
 
@@ -108,13 +147,27 @@ async function handleCloseWindow(): Promise<void> {
           class="drag-region flex h-11 items-center justify-between border-b border-white/40 px-3 dark:border-white/10"
           @dblclick="handleToggleMaximizeWindow">
           <div class="flex items-center gap-2">
-              <img :src="appLogo" alt="PocoPic" class="w-7 ml-1 mr-1 object-contain" />
-            <p class="text-md font-bold tracking-wide text-slate-600 dark:text-slate-300">PocoPic</p>
+            <img :src="appLogo" alt="PocoPic" class="w-7 ml-1 mr-1 object-contain" />
+            <p class="text-md font-bold tracking-wide text-slate-600 dark:text-slate-300">
+              PocoPic
+            </p>
           </div>
-          <div class="no-drag flex items-center gap-1">
+          <div class="no-drag flex items-center gap-2">
+            <UTooltip :delay-duration="0" text="打开 Profile 管理">
+              <UBadge color="neutral" variant="soft" class="max-w-44 rounded-full px-3 py-1.5 text-xs"
+                @click="openProfileModal">
+                <UIcon name="i-lucide-users" class="h-4 w-4" />
+
+                <span class="truncate">{{ activeProfileName }}</span>
+              </UBadge>
+            </UTooltip>
             <UTooltip :delay-duration="0" text="切换开发者工具">
               <UButton class="window-button" size="md" color="neutral" variant="ghost" icon="i-lucide-terminal"
                 aria-label="切换开发者工具" @click="handleToggleDevTools" />
+            </UTooltip>
+            <UTooltip :delay-duration="0" text="重载窗口">
+              <UButton class="window-button" size="sm" color="neutral" variant="ghost" icon="i-lucide-refresh-cw"
+                aria-label="重载窗口" @click="handleReloadWindow" />
             </UTooltip>
             <UTooltip :delay-duration="0" text="最小化窗口">
               <UButton class="window-button" size="md" color="neutral" variant="ghost" icon="i-lucide-minus"
@@ -134,11 +187,11 @@ async function handleCloseWindow(): Promise<void> {
 
         <div class="min-h-0 flex-1 p-3">
           <div class="mx-auto grid h-full min-h-0 gap-3" :style="{ gridTemplateColumns: layoutColumns }">
-            <aside class="cute-panel flex min-h-0 flex-col p-5 drag-region">
+            <aside class="cute-panel flex min-h-0 flex-col px-1 py-5 pb-1 drag-region">
               <UNavigationMenu orientation="vertical" highlight color="primary" :items="displaySidebarItems"
                 class="data-[orientation=vertical]:w-full flex-1" :ui="{
                   item: isSidebarCollapsed
-                    ? 'no-drag rounded-2xl px-3 py-3 mb-2 transition-all duration-300 flex justify-center'
+                    ? 'no-drag rounded-2xl px-2 py-3 mb-2 transition-all duration-300 flex justify-center'
                     : 'no-drag rounded-2xl px-4 py-3 mb-2 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:translate-x-1 hover:bg-primary-50 dark:hover:bg-primary-900/20',
                   icon: 'text-primary-400 dark:text-primary-300'
                 }" />
@@ -157,7 +210,8 @@ async function handleCloseWindow(): Promise<void> {
 
                 <div
                   class="rounded-2xl border border-slate-100 bg-white/70 p-2 dark:border-slate-800 dark:bg-slate-900/70">
-                  <div class="flex items-center justify-center gap-1 no-drag" :class="isSidebarCollapsed ? 'flex-col' : ''">
+                  <div class="flex items-center justify-center gap-1 no-drag"
+                    :class="isSidebarCollapsed ? 'flex-col' : ''">
                     <UTooltip :delay-duration="0" text="切换为跟随系统主题">
                       <UButton size="sm" color="neutral" :variant="isColorModeActive('system') ? 'solid' : 'ghost'"
                         icon="i-lucide-monitor" aria-label="跟随系统主题"
@@ -174,9 +228,11 @@ async function handleCloseWindow(): Promise<void> {
                         @click="() => handleAction(() => store.setColorMode('dark'))" />
                     </UTooltip>
                     <UTooltip :delay-duration="0" :text="isSidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'">
-                      <UButton :class="isSidebarCollapsed ? 'mt-auto' : 'ml-auto'" color="neutral" variant="ghost" size="sm"
-                        :icon="isSidebarCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
-                        :aria-label="isSidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'" @click="toggleSidebar" />
+                      <UButton :class="isSidebarCollapsed ? 'mt-auto' : 'ml-auto'" color="neutral" variant="ghost"
+                        size="sm" :icon="isSidebarCollapsed
+                          ? 'i-lucide-panel-left-open'
+                          : 'i-lucide-panel-left-close'
+                          " :aria-label="isSidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'" @click="toggleSidebar" />
                     </UTooltip>
                   </div>
                 </div>
@@ -193,16 +249,23 @@ async function handleCloseWindow(): Promise<void> {
           </div>
         </div>
 
+        <ProfileManageModal :open="isProfileModalOpen" :profiles="store.profiles"
+          :active-profile-id="store.activeProfileId" @update:open="handleProfileModalOpenChange"
+          @switch-profile="handleProfileSwitch" @create-profile="handleCreateProfile"
+          @rename-profile="handleRenameProfile" />
+
         <div v-if="store.needFirstRunSetup"
           class="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md transition-all duration-500">
-          <div class="cute-card w-[560px] p-8">
+          <div class="cute-card w-140 p-8">
             <div class="mb-6 flex items-center gap-4">
               <div
                 class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-500 dark:bg-blue-900/50 dark:text-blue-300">
                 <UIcon name="i-lucide-sparkles" class="h-6 w-6" />
               </div>
               <div>
-                <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">欢迎来到 PocoPic ✨</h2>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">
+                  欢迎来到 PocoPic ✨
+                </h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                   首次启动需要完成一些简单的初始化设置
                 </p>
@@ -213,19 +276,24 @@ async function handleCloseWindow(): Promise<void> {
               <div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50">
                 <div
                   class="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-700 text-slate-400">
-                  1</div>
-                <p class="text-sm text-slate-600 dark:text-slate-300">设置元数据索引路径、缩略图目录与临时目录</p>
+                  1
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300">
+                  设置元数据索引路径、缩略图目录与临时目录
+                </p>
               </div>
               <div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50">
                 <div
                   class="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-700 text-slate-400">
-                  2</div>
+                  2
+                </div>
                 <p class="text-sm text-slate-600 dark:text-slate-300">添加至少一个扫描目录</p>
               </div>
               <div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50">
                 <div
                   class="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-700 text-slate-400">
-                  3</div>
+                  3
+                </div>
                 <p class="text-sm text-slate-600 dark:text-slate-300">执行“开始构建”</p>
               </div>
             </div>

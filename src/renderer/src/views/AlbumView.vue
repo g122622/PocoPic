@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import SearchToolbar from '@renderer/components/SearchToolbar.vue'
 import MediaVirtualGrid from '@renderer/components/MediaVirtualGrid.vue'
 import YearTimelinePanel from '@renderer/components/YearTimelinePanel.vue'
@@ -14,7 +14,13 @@ const uiError = ref('')
 const startDateMs = ref<number | null>(null)
 const endDateMs = ref<number | null>(null)
 const mediaGridRef = ref<MediaVirtualGridExposed | null>(null)
-const gridSize = ref<'sm' | 'md' | 'lg'>('md')
+const gridSize = ref<'sm' | 'md' | 'lg'>('sm')
+const showCapturedAt = computed(() => {
+  return store.settings?.showMediaCapturedAt ?? true
+})
+const showSize = computed(() => {
+  return store.settings?.showMediaSize ?? true
+})
 
 function onGridSizeChange(value: 'sm' | 'md' | 'lg'): void {
   gridSize.value = value
@@ -94,6 +100,11 @@ watch(
           :total="store.total"
           :get-item="store.getMediaByIndex"
           :get-thumbnail-url="store.toThumbnailUrl"
+          :show-item-context-menu="
+            (filePath) => handleAction(() => store.showMediaItemContextMenu(filePath))
+          "
+          :show-meta-captured-at="showCapturedAt"
+          :show-meta-size="showSize"
           :size-level="gridSize"
           :initial-scroll-top="store.albumScrollTop"
           @need-range="(start, end) => handleAction(() => store.ensureRangeLoaded(start, end))"

@@ -8,10 +8,12 @@ import { MediaScannerService } from './services/MediaScannerService'
 import { BuildService } from './services/BuildService'
 import { registerIpc } from './ipc/registerIpc'
 import { ThumbnailDatabaseService } from './services/ThumbnailDatabaseService'
+import { ProfileService } from './services/ProfileService'
 
 let mainWindow: BrowserWindow | null = null
 
-const settingsService = new SettingsService()
+const profileService = new ProfileService()
+const settingsService = new SettingsService(profileService)
 const databaseService = new DatabaseService()
 const thumbnailDatabaseService = new ThumbnailDatabaseService()
 const scannerService = new MediaScannerService()
@@ -110,11 +112,21 @@ app.whenReady().then(() => {
 
   registerIpc({
     getWindow: () => mainWindow,
+    profileService,
     settingsService,
     databaseService,
     thumbnailDatabaseService,
     buildService
   })
+
+  void profileService
+    .initialize()
+    .then(async () => {
+      await settingsService.initializeProfileSettingsIfNeeded()
+    })
+    .catch((error: unknown) => {
+      console.error('初始化 Profile 失败', error)
+    })
 
   createWindow()
 
